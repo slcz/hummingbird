@@ -12,18 +12,18 @@ after control transfers to the RAM.
                      +-----------------------------------------+
     +----------+     |   +-------+                             |
     | PC[11:0] |     |   |ADDRESS| | |          +-----+        |
-    +----^-----+     |   |  REG  <-+            |     |        |
-         |           |   +---+---+ | |      +---v---+ |        |
-         |           +-------o     | <------+ A REG | |        |
----------v-------------------v---  | |      +---+---+ |        |
-     Address bus 12b               | |          | OP/A|        |
+    +----^-----+     |   |  REG  <-+ |          |     |        |
+         |           |   +---+---+ |D|      +---v---+ |        |
+         |           +-------o     |a<------+ A REG | |        |
+---------v-------------------v---  |t|      +---+---+ |        |
+     Address bus 12b               |a|          | OP/A|        |
 ---------+----------------+------  | | OP/B +---v---+ | +----+ |
-         |                |        | +------> ALU   +-+->FLAG| |fetch[4:7]
-         |                |        | |      +-------+   +-+--+ |
-    +----v------+  +------v-----+  | |          +---------+----o
+         |                |        |b+------> ALU   +-+->FLAG| |fetch[4:7]
+         |                |        |u|      +-------+   +-+--+ |
+    +----v------+  +------v-----+  |s|          +---------+----o
     | Program   |  |     RAM    |  | | sign +---+---+     +--+ |
-    | Store 4x8 |  |    4Kx8b   |  | <------+ FETCH <--phase | |fetch[0:3]
-    +----+------+  +------^-----+  | |  ext +-------+   | +--v-v----+
+    | Store 4x8 |  |    4Kx8b   |  |8<------+ FETCH <--phase | |fetch[0:3]
+    +----+------+  +------^-----+  |b|  ext +-------+   | +--v-v----+
          |                |        | |          ^       +->  UCODE  +->control
          |                |        | |          |         +---------+  signals
 ---------v----------------v--------+ +----------+------------------------------
@@ -73,9 +73,18 @@ There are total of 31 instructions:
 | SHL3 | 0D   |  0/z  | A=A<<3                                             |
 | ROL3 | 0E   |  0/z  | A=A rotate left 3 (with carry bit)                 |
 | LD1  | 0F   |  0/0  | A=1 load 1                                         |
-|------|------|-------|----------------------------------------------------|
 
-ALU is 8 bit wide and has 2 input port, port A is always connected to the
+RAM address are coming from the address bus. At phase 0, instruction is read
+from RAM and locked into the fetch register. The low 4 bit is sign extended or
+in the case of LIH instuction, padded with 4 bit zeros and copied to the data
+bus. The opcode is also fed into the ucode module, together with phase
+signal and flag registers. Microcode module outputs 16 control signals and
+controls ALU operation mode as well as other components.
+
+ALU is 8 bit wide and has 2 input ports. Port A is always connected to the
 accumulator (A REG) and port B comes from the data bus. ALU is composed
 of 2 cascading 74181 4bit ALU ICs.
 
+Last, data bus is copied to address register, together with opcode[3:0],
+composed 12 bit address input. This input, enabled by oeaddress signal is used
+to set jump address target as well as load address from the RAM.
