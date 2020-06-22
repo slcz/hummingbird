@@ -38,106 +38,86 @@ class TOKEN(Enum):
     FREF        = 30
     BREF        = 31
     NEG         = 32
-    NOP_INST    = 50
-    GT_INST     = 51
-    GE_INST     = 52
-    LT_INST     = 53
-    LE_INST     = 54
-    EQ_INST     = 55
-    SC_INST     = 56
-    CC_INST     = 57
-    NEG_INST    = 58
-    SHL_INST    = 59
-    ROL_INST    = 60
-    SHL2_INST   = 61
-    ROL2_INST   = 62
-    SHL3_INST   = 63
-    ROL3_INST   = 64
-    LD1_INST    = 65
+    LD0_INST    = 50
+    GT_INST     = 58
+    GE_INST     = 59
+    LT_INST     = 60
+    LE_INST     = 61
+    EQ_INST     = 62
+    NE_INST     = 63
+    SHL_INST    = 64
+    ROL_INST    = 65
+
     LD_INST     = 66
     ST_INST     = 67
     ADD_INST    = 68
     ADDI_INST   = 69
-    SUB_INST    = 70
-    JMP_INST    = 71
-    JC_INST     = 72
-    CMP_INST    = 73
-    CMPI_INST   = 74
-    NOR_INST    = 75
-    NORI_INST   = 76
-    AND_INST    = 77
-    XOR_INST    = 78
-    XORI_INST   = 79
+    ADDIC_INST  = 70
+    SUB_INST    = 71
+    JMP_INST    = 72
+    JC_INST     = 73
+    CMP_INST    = 74
+    CMPI_INST   = 75
+    NOR_INST    = 76
+    NORI_INST   = 77
+    AND_INST    = 78
+    XOR_INST    = 79
     LIH_INST    = 80
 
     END         = 100
 
 inst = {
-    TOKEN.NOP_INST:   [1, 8, 0x00],
-    TOKEN.GT_INST:    [1, 8, 0x01],
-    TOKEN.GE_INST:    [1, 8, 0x02],
-    TOKEN.LT_INST:    [1, 8, 0x03],
-    TOKEN.LE_INST:    [1, 8, 0x04],
-    TOKEN.EQ_INST:    [1, 8, 0x05],
-    TOKEN.SC_INST:    [1, 8, 0x06],
-    TOKEN.CC_INST:    [1, 8, 0x07],     
-    TOKEN.NEG_INST:   [1, 8, 0x08],
-    TOKEN.SHL_INST:   [1, 8, 0x09],
-    TOKEN.ROL_INST:   [1, 8, 0x0a],
-    TOKEN.SHL2_INST:  [1, 8, 0x0b],
-    TOKEN.ROL2_INST:  [1, 8, 0x0c],
-    TOKEN.SHL3_INST:  [1, 8, 0x0d],
-    TOKEN.ROL3_INST:  [1, 8, 0x0e],
-    TOKEN.LD1_INST:   [1, 8, 0x0f],
+    TOKEN.LD0_INST:   [1, 8, 0x00],
+    TOKEN.GT_INST:    [1, 8, 0x08],
+    TOKEN.GE_INST:    [1, 8, 0x09],
+    TOKEN.LT_INST:    [1, 8, 0x0a],
+    TOKEN.LE_INST:    [1, 8, 0x0b],
+    TOKEN.EQ_INST:    [1, 8, 0x0c],
+    TOKEN.NE_INST:    [1, 8, 0x0d],
+    TOKEN.SHL_INST:   [1, 8, 0x0e],
+    TOKEN.ROL_INST:   [1, 8, 0x0f],
     TOKEN.LD_INST:    [2, 4, 0x1],
     TOKEN.ST_INST:    [2, 4, 0x2],
     TOKEN.ADD_INST:   [2, 4, 0x3],
     TOKEN.ADDI_INST:  [1, 4, 0x4],
-    TOKEN.SUB_INST:   [2, 4, 0x5],
-    TOKEN.JMP_INST:   [2, 4, 0x6],
-    TOKEN.JC_INST:    [2, 4, 0x7],
-    TOKEN.CMP_INST:   [2, 4, 0x8],
-    TOKEN.CMPI_INST:  [1, 4, 0x9],
-    TOKEN.NOR_INST:   [2, 4, 0xa],
-    TOKEN.NORI_INST:  [1, 4, 0xb],
-    TOKEN.AND_INST:   [2, 4, 0xc],
-    TOKEN.XOR_INST:   [2, 4, 0xd],
-    TOKEN.XORI_INST:  [2, 4, 0xe],
+    TOKEN.ADDIC_INST: [1, 4, 0x5],
+    TOKEN.SUB_INST:   [2, 4, 0x6],
+    TOKEN.JMP_INST:   [2, 4, 0x7],
+    TOKEN.JC_INST:    [2, 4, 0x8],
+    TOKEN.CMP_INST:   [2, 4, 0x9],
+    TOKEN.CMPI_INST:  [1, 4, 0xa],
+    TOKEN.NOR_INST:   [2, 4, 0xb],
+    TOKEN.NORI_INST:  [1, 4, 0xc],
+    TOKEN.AND_INST:   [2, 4, 0xd],
+    TOKEN.XOR_INST:   [2, 4, 0xe],
     TOKEN.LIH_INST:   [1, 4, 0xf]
 }
 
 keyword = {
-    "nop":  TOKEN.NOP_INST,
+    "ld0":  TOKEN.LD0_INST,
     "gt":   TOKEN.GT_INST,
     "ge":   TOKEN.GE_INST,
     "lt":   TOKEN.LT_INST,
     "le":   TOKEN.LE_INST,
     "eq":   TOKEN.EQ_INST,
-    "sc":   TOKEN.SC_INST,
-    "cc":   TOKEN.CC_INST,
-    "neg":  TOKEN.NEG_INST,
+    "neg":  TOKEN.NE_INST,
     "shl":  TOKEN.SHL_INST,
     "rol":  TOKEN.ROL_INST,
-    "shl2": TOKEN.SHL2_INST,
-    "rol2": TOKEN.ROL2_INST,
-    "shl3": TOKEN.SHL3_INST,
-    "rol3": TOKEN.ROL3_INST,
-    "ld1":  TOKEN.LD1_INST,
     "ld":   TOKEN.LD_INST,
     "st":   TOKEN.ST_INST,
     "add":  TOKEN.ADD_INST,
     "addi": TOKEN.ADDI_INST,
+    "addic":TOKEN.ADDIC_INST,
     "sub":  TOKEN.SUB_INST,
     "jmp":  TOKEN.JMP_INST,
-    "jc":   TOKEN.JMP_INST,
+    "jc":   TOKEN.JC_INST,
     "cmp":  TOKEN.CMP_INST,
     "cmpi": TOKEN.CMPI_INST,
     "nor":  TOKEN.NOR_INST,
     "nori": TOKEN.NORI_INST,
     "and":  TOKEN.AND_INST,
     "xor":  TOKEN.XOR_INST,
-    "xori": TOKEN.XORI_INST,
-    "lih":  TOKEN.LIH_INST
+    "lh":   TOKEN.LIH_INST,
     "-":    TOKEN.MINUS,
     "+":    TOKEN.PLUS,
     ":":    TOKEN.COLON,

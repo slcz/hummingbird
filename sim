@@ -1,0 +1,279 @@
+#!/usr/bin/env python3
+import sys
+import numpy as np
+from enum import Enum
+
+class I(Enum):
+    SINGLE = 0x0
+    LD   = 0x1
+    ST   = 0x2
+    ADD  = 0x3
+    ADDI = 0x4
+    ADDIC= 0x5
+    SUB  = 0x6
+    JMP  = 0x7
+    JC   = 0x8
+    CMP  = 0x9
+    CMPI = 0xa
+    NOR  = 0xb
+    NORI = 0xc
+    AND  = 0xd
+    XOR  = 0xe
+    LH   = 0xf
+    LD0  = 0x00
+    GT   = 0x08
+    GE   = 0x09
+    LT   = 0x0a
+    LE   = 0x0b
+    EQ   = 0x0c
+    NE   = 0x0d
+    SHL  = 0x0e
+    ROL  = 0x0f
+
+twobyte_inst = [
+    I.LD,
+    I.ST,
+    I.ADD,
+    I.SUB,
+    I.JMP,
+    I.JC,
+    I.CMP,
+    I.NOR,
+    I.AND,
+    I.XOR
+]
+
+mem_indirect = [
+    I.ADD,
+    I.SUB,
+    I.CMP,
+    I.NOR,
+    I.AND,
+    I.XOR
+]
+
+table = []
+with open("74181_table.csv", "r") as f:
+    for line in f:
+        line = line.rstrip().split()
+        table.append([int(x) for x in line])
+
+table = np.array(table)
+
+def alu_74181(a, b, s, m, cin):
+    index = cin | (m << 1) | (s << 2) | ((b & 0xf) << 6) | ((a & 0xf) << 10)
+    flo, c, _ = table[index]
+    index = c | (m << 1) | (s << 2) | ((b >> 4) << 6) | ((a >> 4) << 10)
+    fhi, c, _ = table[index]
+    r = flo | (fhi << 4)
+    return r, c, r == 0
+
+def alu_add(op1, op2, cin):
+    # ADD
+    c = ((op1 & 0x7f) + (op2 & 0x7f) + cin) & 0x80
+    r = op1 + op2 + cin
+    cflag = r >= 256
+    zflag = ((r & 0xff) == 0)
+    sflag = (r & 0x80) != 0
+    oflag = cflag ^ (c != 0)
+    # 8 bit result
+    return r & 0xff, cflag, zflag, sflag, oflag
+
+def main(argv):
+    mem_size = 4096
+    program_counter = 0
+    a_register = 0
+    program = []
+    assert len(argv) >= 2, "sim <program>"
+
+    in_stream = [[]] * 16
+    if len(argv) == 3:
+        inp = []
+        with open(sys.argv[2], "r") as f:
+            for line in sys.stdin:
+                line = line.rstrip().split()
+                inp += line
+        inp = [int(i, 16) for i in inp]
+        index = 0
+        for i, x in enumerate(inp):
+            if i % 2 == 0:
+                index = x & 0x0f
+            else:
+                in_stream[index] = x & 0xff
+
+    with open(argv[1], "r") as f:
+        for line in f:
+            if line[:5] == "const":
+                continue
+            if line[:2] == "};":
+                continue
+            line = line.rstrip().split()
+            line = [w[:-1] if w[-1] == ',' else w for w in line]
+            line = [int(w, 16) for w in line]
+            program += line
+    cflag, zflag = 0, 0
+
+    mem = [0] * mem_size
+    assert len(program) < mem_size
+    for i, x in enumerate(program):
+        mem[i] = x
+
+    cycle = 0
+    terminate = False
+    while not terminate:
+        assert program_counter < mem_size, "out of range"
+        inst = mem[program_counter]
+        # decode
+        opc = I(inst >> 4)
+        operand = inst & 0xf
+        if opc in twobyte_inst:
+            # 12 bit address (unsigned)
+            program_counter += 1
+            assert program_counter < mem_size, "out of range"
+            operand = (operand << 8) | mem[program_counter]
+            if opc in mem_indirect:
+                operand = mem[operand]
+        elif opc == I.SINGLE:
+            pass
+        elif I(opc) == I.LH:
+            operand = operand << 4
+        else:
+            # immediate operand
+            operand |= 0 if (operand & 8) == 0 else 0xf0
+
+        # Deocder
+        opc = I(opc)
+        if opc == I.LH:
+            a_register = operand
+        elif opc == I.LD:
+            if (operand >> 4) == 0xff:
+                a_register = in_stream[operand & 0x0f][0]
+                in_stream[operand & 0x0f] = in_stream[operand & 0x0f][1:]
+                print("i {} {}".format((operand & 0x0f), a_register))
+            else:
+                a_register = mem[operand]
+        elif opc == I.ST:
+            if (operand >> 4) == 0xff:
+                print("o {} {}".format((operand & 0x0f), a_register))
+            else:
+                mem[operand] = a_register
+        elif opc == I.ADD or opc == I.ADDI or opc == I.ADDIC:
+            # addi 0 prints status()
+            if opc == I.ADDI and operand == 0:
+                print("cycle {} pc {} a {} {:x} c {} z {}".format(
+                    cycle,
+                    program_counter,
+                    a_register, a_register,
+                    cflag,
+                    int(zflag),
+                ))
+            a_register, cflag, zflag = alu_74181(
+                a_register,
+                operand,
+                9,
+                0,
+                cflag if opc == I.ADDIC else 1,
+            )
+        elif opc == I.SUB:
+            a_register, cflag, zflag = alu_74181(
+                a_register,
+                operand,
+                6,
+                0,
+                0
+            )
+        elif opc == I.JMP:
+            if program_counter == operand + 1:
+                terminate = True
+            program_counter = operand - 1
+        elif opc == I.JC:
+            if not cflag:
+                program_counter = operand - 1
+        elif opc == I.CMP or opc == I.CMPI:
+            _, cflag, zflag = alu_74181(
+                a_register,
+                operand,
+                6,
+                0,
+                0
+            )
+        elif opc == I.AND or opc == I.XOR or opc == I.NOR or opc == I.NORI:
+            a_register, cflag, zflag = alu_74181(
+                a_register,
+                operand,
+                4 if opc == I.AND else (9 if opc == I.XOR else 1),
+                1,
+                0
+            )
+        elif opc == I.SINGLE:
+            opc = I(inst)
+            if opc == I.GT:
+                _, cflag, zflag = alu_74181(
+                    a_register,
+                    operand,
+                    3,
+                    0,
+                    cflag or zflag
+                )
+            elif inst == I.GE:
+                _, cflag, zflag = alu_74181(
+                    a_register,
+                    operand,
+                    3,
+                    0,
+                    cflag and not zflag
+                )
+            elif opc == I.LT:
+                _, cflag, zflag = alu_74181(
+                    a_register,
+                    operand,
+                    3,
+                    0,
+                    not cflag or zflag
+                )
+            elif opc == I.LE:
+                _, cflag, zflag = alu_74181(
+                    a_register,
+                    operand,
+                    3,
+                    0,
+                    not cflag and not zflag
+                )
+            elif opc == I.EQ:
+                _, cflag, zflag = alu_74181(
+                    a_register,
+                    operand,
+                    3,
+                    0,
+                    not zflag
+                )
+            elif opc == I.NE:
+                a_register, cflag, zflag = alu_74181(
+                    a_register,
+                    operand,
+                    3,
+                    0,
+                    zflag
+                )
+            elif opc == I.SHL or opc == I.ROL:
+                a_register, cflag, zflag = alu_74181(
+                    a_register,
+                    operand,
+                    12,
+                    0,
+                    1 if opc == I.SHL else cflag
+                )
+            elif opc == I.LD0:
+                a_register = mem[0]
+        program_counter += 1
+        cycle += 2
+    print("cycle {} pc {} a {} {:x} c {} z {}".format(
+        cycle,
+        program_counter,
+        a_register, a_register,
+        cflag,
+        int(zflag),
+    ))
+
+if __name__ == "__main__":
+    main(sys.argv)
