@@ -64,10 +64,12 @@ li(0x59)
 cmp data_5a ge
 jc 1f
 li (6)
-ld data_5a
-shl shl shl shl
 addi 0
 ld data_5a
-// a = 5a, rotate 9 times restore the original number
+shl shl shl shl
+// a = a0
+addi 0
+ld data_5a
+// a = 5a, rotate 9 times restores the original number
 rol rol rol rol rol rol rol rol rol
 1: jmp 1b
