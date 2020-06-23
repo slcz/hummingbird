@@ -4,7 +4,7 @@ import numpy as np
 from enum import Enum
 
 class I(Enum):
-    SINGLE = 0xe
+    SINGLE = 0xf
     LD   = 0x0
     ST   = 0x1
     ADD  = 0x2
@@ -19,16 +19,21 @@ class I(Enum):
     NORI = 0xb
     AND  = 0xc
     XOR  = 0xd
-    LH   = 0xf
-    LD0  = 0xe0
-    GT   = 0xe8
-    GE   = 0xe9
-    LT   = 0xea
-    LE   = 0xeb
-    EQ   = 0xec
-    NE   = 0xed
-    SHL  = 0xee
-    ROL  = 0xef
+    LH   = 0xe
+    GT   = 0xf0
+    LT   = 0xf2
+    EQ   = 0xf3
+    NE   = 0xf4
+    NC   = 0xf5
+    SIGN = 0xf6
+    NEG  = 0xf7
+    SHL  = 0xf8
+    SHR  = 0xf9
+    SHL4 = 0xfa
+    ROL  = 0xfc
+    ROR  = 0xfd
+    SWAP = 0xfe
+    ASR  = 0xff
 
 twobyte_inst = [
     I.LD,
@@ -120,6 +125,19 @@ def main(argv):
 
     cycle = 0
     terminate = False
+    # 2 discard output, 1 set Cin to 1, 0 set Cin to carry input 
+    rotate_inst = {
+                                            # C 01234567
+        I.SIGN: [2],                        # 0 01234567
+        I.SHL:  [1],                        # 7 6543210Z
+        I.SHR:  [1, 0, 0, 0, 0, 0, 0, 0],   # 7 z0123456
+        I.SHL4: [1, 1, 1, 1],               # 3 4567zzzz
+        I.ROL:  [2, 0],                     # 0 12345670
+        I.ROR:  [2, 0] * 7,                 # 6 70123456
+        I.SWAP: [2, 0] * 4,                 # 3 45670123
+        I.ASR:  [2, 0, 0, 0, 0, 0, 0, 0, 0] # 7 00123456
+    }
+
     while not terminate:
         assert program_counter < mem_size, "out of range"
         inst = mem[program_counter]
@@ -217,11 +235,10 @@ def main(argv):
         elif opc == I.SINGLE:
             flags = {
                 I.GT: cflag or zflag,
-                I.GE: cflag and not zflag,
                 I.LT: not cflag or zflag, 
-                I.LE: not cflag and not zflag,
                 I.EQ: not zflag,
                 I.NE: zflag,
+                I.NC: not cflag
             }
             opc = I(inst)
             if opc in flags:
@@ -232,16 +249,38 @@ def main(argv):
                     0,
                     flags[opc]
                 )
-            elif opc == I.SHL or opc == I.ROL:
+                cycle += 2
+            elif opc == I.NEG:
+                # not
+                a_register, _, _ = alu_74181(
+                    a_register,
+                    operand,
+                    0,
+                    1,
+                    1
+                )
+                # + 1
                 a_register, cflag, zflag = alu_74181(
                     a_register,
                     operand,
-                    12,
                     0,
-                    1 if opc == I.SHL else cflag
+                    0,
+                    0
                 )
-            elif opc == I.LD0:
-                a_register = mem[0]
+                cycle += 3
+            elif opc in rotate_inst:
+                for i in rotate_inst[opc]:
+                    x, cflag, zflag = alu_74181(
+                        a_register,
+                        operand,
+                        12,
+                        0,
+                        cflag if i == 0 else 1
+                    )
+                    if i != 2:
+                        a_register = x
+                cycle += 1 + len(rotate_inst[opc])
+
         program_counter += 1
     print("CYCLE {:4d} PC {:4d} A {:4d} {:2x} C {} Z {}".format(
         cycle,

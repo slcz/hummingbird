@@ -38,15 +38,20 @@ class TOKEN(Enum):
     FREF        = 30
     BREF        = 31
     NEG         = 32
-    LD0_INST    = 50
-    GT_INST     = 58
-    GE_INST     = 59
-    LT_INST     = 60
-    LE_INST     = 61
-    EQ_INST     = 62
-    NE_INST     = 63
-    SHL_INST    = 64
-    ROL_INST    = 65
+    GT_INST     = 50
+    LT_INST     = 52
+    EQ_INST     = 53
+    NE_INST     = 54
+    NC_INST     = 55
+    SIGN_INST   = 56
+    NEG_INST    = 57
+    SHL_INST    = 58
+    SHR_INST    = 59
+    SHL4_INST   = 60
+    ROL_INST    = 62
+    ROR_INST    = 63
+    SWAP_INST   = 64
+    ASR_INST    = 65
 
     LD_INST     = 66
     ST_INST     = 67
@@ -67,15 +72,22 @@ class TOKEN(Enum):
     END         = 100
 
 inst = {
-    TOKEN.LD0_INST:   [1, 8, 0xe0],
-    TOKEN.GT_INST:    [1, 8, 0xe8],
-    TOKEN.GE_INST:    [1, 8, 0xe9],
-    TOKEN.LT_INST:    [1, 8, 0xea],
-    TOKEN.LE_INST:    [1, 8, 0xeb],
-    TOKEN.EQ_INST:    [1, 8, 0xec],
-    TOKEN.NE_INST:    [1, 8, 0xed],
-    TOKEN.SHL_INST:   [1, 8, 0xee],
-    TOKEN.ROL_INST:   [1, 8, 0xef],
+    TOKEN.GT_INST:    [1, 8, 0xf0],
+    TOKEN.LT_INST:    [1, 8, 0xf2],
+    TOKEN.EQ_INST:    [1, 8, 0xf3],
+    TOKEN.NE_INST:    [1, 8, 0xf4],
+    TOKEN.NC_INST:    [1, 8, 0xf5],
+    TOKEN.SIGN_INST:  [1, 8, 0xf6],
+    TOKEN.NEG_INST:   [1, 8, 0xf7],
+
+    TOKEN.SHL_INST:   [1, 8, 0xf8],
+    TOKEN.SHR_INST:   [1, 8, 0xf9],
+    TOKEN.SHL4_INST:  [1, 8, 0xfa],
+    TOKEN.ROL_INST:   [1, 8, 0xfc],
+    TOKEN.ROR_INST:   [1, 8, 0xfd],
+    TOKEN.SWAP_INST:  [1, 8, 0xfe],
+    TOKEN.ASR_INST:   [1, 8, 0xff],
+
     TOKEN.LD_INST:    [2, 4, 0x0],
     TOKEN.ST_INST:    [2, 4, 0x1],
     TOKEN.ADD_INST:   [2, 4, 0x2],
@@ -90,19 +102,28 @@ inst = {
     TOKEN.NORI_INST:  [1, 4, 0xb],
     TOKEN.AND_INST:   [2, 4, 0xc],
     TOKEN.XOR_INST:   [2, 4, 0xd],
-    TOKEN.LIH_INST:   [1, 4, 0xf]
+    TOKEN.LIH_INST:   [1, 4, 0xe]
 }
 
 keyword = {
-    "ld0":  TOKEN.LD0_INST,
     "gt":   TOKEN.GT_INST,
-    "ge":   TOKEN.GE_INST,
+    "Cz":   TOKEN.GT_INST,
     "lt":   TOKEN.LT_INST,
-    "le":   TOKEN.LE_INST,
+    "cz":   TOKEN.LT_INST,
     "eq":   TOKEN.EQ_INST,
-    "neg":  TOKEN.NE_INST,
+    "ne":   TOKEN.NE_INST,
+    "nc":   TOKEN.NC_INST,
+
+    "sign": TOKEN.SIGN_INST,
+    "neg":  TOKEN.NEG_INST,
     "shl":  TOKEN.SHL_INST,
+    "shr":  TOKEN.SHR_INST,
+    "shl4": TOKEN.SHL4_INST,
     "rol":  TOKEN.ROL_INST,
+    "ror":  TOKEN.ROR_INST,
+    "swap": TOKEN.SWAP_INST,
+    "asr":  TOKEN.ASR_INST,
+
     "ld":   TOKEN.LD_INST,
     "st":   TOKEN.ST_INST,
     "add":  TOKEN.ADD_INST,
