@@ -40,7 +40,7 @@ jc 1f
 // a = 0 a = 0
 addi 0
 li (0x5b)
-cmp data_5a ge
+cmp data_5a
 jc 1f
 2: jmp 2b
 1: li(1)
@@ -61,7 +61,7 @@ jc 1f
 // a = 3
 addi 0
 li(0x59)
-cmp data_5a ge
+cmp data_5a gt
 jc 1f
 // a = 4
 li (4)

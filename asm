@@ -431,6 +431,8 @@ def program(g, env):
             expression = False
         elif t == TOKEN.END:
             return
+        else:
+            push_back(t, l, fn, ln)
 
         if expression:
             t, l, fn, ln = binop(g, 9, env)
