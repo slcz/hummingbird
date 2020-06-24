@@ -21,6 +21,7 @@ class I(Enum):
     XOR  = 0xd
     LH   = 0xe
     GT   = 0xf0
+    NOP  = 0xf1
     LT   = 0xf2
     EQ   = 0xf3
     NE   = 0xf4
@@ -168,15 +169,6 @@ def main(argv):
                 mem[operand] = a_register
             cycle += 3
         elif opc == I.ADD or opc == I.ADDI or opc == I.ADDIC:
-            # addi 0 prints status()
-            if opc == I.ADDI and operand == 0:
-                print("CYCLE {:4d} PC {:4d} A {:4d} {:2x} C {} Z {}".format(
-                    cycle,
-                    program_counter,
-                    a_register, a_register,
-                    cflag,
-                    int(zflag),
-                ))
             a_register, cflag, zflag = alu_74181(
                 a_register,
                 operand,
@@ -269,6 +261,16 @@ def main(argv):
                     if i != 2:
                         a_register = x
                 cycle += 1 + len(rotate_inst[opc])
+            else:
+                # NOP prints status()
+                print("CYCLE {:4d} PC {:4d} A {:4d} {:2x} C {} Z {}".format(
+                    cycle,
+                    program_counter,
+                    a_register, a_register,
+                    cflag,
+                    int(zflag),
+                ))
+                cycle += 2
 
         program_counter += 1
     print("CYCLE {:4d} PC {:4d} A {:4d} {:2x} C {} Z {}".format(

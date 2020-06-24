@@ -6,7 +6,6 @@ vec: 1 0 3 7 5 9 6 8 4 9 7 0 6 11 5 (-1)
 
 start:
 ld vec
-addi 0
 cmpi -1 eq
 jc 1f
 add acc

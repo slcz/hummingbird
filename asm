@@ -68,11 +68,13 @@ class TOKEN(Enum):
     AND_INST    = 78
     XOR_INST    = 79
     LIH_INST    = 80
+    NOP_INST    = 81
 
     END         = 100
 
 inst = {
     TOKEN.GT_INST:    [1, 8, 0xf0],
+    TOKEN.NOP_INST:   [1, 8, 0xf1],
     TOKEN.LT_INST:    [1, 8, 0xf2],
     TOKEN.EQ_INST:    [1, 8, 0xf3],
     TOKEN.NE_INST:    [1, 8, 0xf4],
@@ -113,6 +115,7 @@ keyword = {
     "eq":   TOKEN.EQ_INST,
     "ne":   TOKEN.NE_INST,
     "nc":   TOKEN.NC_INST,
+    "nop":  TOKEN.NOP_INST,
 
     "sign": TOKEN.SIGN_INST,
     "neg":  TOKEN.NEG_INST,
