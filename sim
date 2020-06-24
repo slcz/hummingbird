@@ -73,17 +73,6 @@ def alu_74181(a, b, s, m, cin):
     r = flo | (fhi << 4)
     return r, c, r == 0
 
-def alu_add(op1, op2, cin):
-    # ADD
-    c = ((op1 & 0x7f) + (op2 & 0x7f) + cin) & 0x80
-    r = op1 + op2 + cin
-    cflag = r >= 256
-    zflag = ((r & 0xff) == 0)
-    sflag = (r & 0x80) != 0
-    oflag = cflag ^ (c != 0)
-    # 8 bit result
-    return r & 0xff, cflag, zflag, sflag, oflag
-
 def main(argv):
     mem_size = 4096
     program_counter = 0

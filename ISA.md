@@ -1,4 +1,5 @@
 # Hummingbird 8-bit CPU instruction set
+
 Hummingbird is a 8 bit 74xx IC based CPU. It is inspired by Nibbler 4 bit CPU.
 Databus is extended to 8 bit and instruction bus is 12 bit. It is a
 Von Neumann architecture. There
@@ -14,9 +15,9 @@ after control transfers to the RAM.
          +-----------+-----------------------------------------+
          |           |             | |                         |
          o-------------------------+ |                         |
-         |           |             | |                         |
-    +----v-----+     |   +-------+ | |                         |
-    | PC[11:0] |     |   |ADDRESS| | |          +-----+        |
+         |           |   +-------+ | |                         |
+    +----v-----+     |   |ADDRESS| | |                         |
+    | PC[11:0] |     |   |       | | |          +-----+        |
     +----+-----+     |   |  REG  <-+ |          |     |        |
          |           |   +---+---+ |D|      +---v---+ |        |
          |           +-------o     |a<------+ A REG | |        |
