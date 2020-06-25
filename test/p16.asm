@@ -1,19 +1,19 @@
 #include "hi.asm"
 
-li (0x59)
+li(0x59)
 cmp data_5a ne
 jc 1f
 hlt
 1:
-li (0x59)
+li(0x59)
 cmp data_5a eq
 jc dead
-li (0x5a)
+li(0x5a)
 cmp data_5a eq
 jc 1f
 hlt
 1:
-li (0x6)
+li(0x6)
 nop
 hlt
 dead:

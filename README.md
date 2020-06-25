@@ -1,7 +1,6 @@
 # Hummingbird 8-bit CPU instruction set
 
-Hummingbird is a 8 bit 74xx IC based CPU. It is inspired by [Nibbler 4 bit CPU]
-(https://www.bigmessowires.com/nibbler/).  The key differences are,
+Hummingbird is a 8 bit 74xx IC based CPU. It is inspired by [Nibbler 4 bit CPU](https://www.bigmessowires.com/nibbler/).  The key differences are,
 1. Databus is extended to 8 bit and instruction bus is 12 bit.
 2. Von Neumann architecture. There are a 4Kx8 program store and a 4Kx8 RAM.
    Code and data are all stored in RAM. After power-on reset, the entire

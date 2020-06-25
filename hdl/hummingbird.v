@@ -89,13 +89,21 @@ module hummingbird(
         .io     (databus)
     );
 
+    wire phase0, phase02, phase13;
+    ttl_7432 or1_mod(
+        .a      ({phase02,    phase[0], phase[1], clk}),
+        .b      ({phase13,    phase[3], phase[2], csram_bar}),
+        .y      ({phase0,     phase02,  phase13, ram_ce})
+    );
+
     // RAM
     wire [11:0] ram_address;
+    wire ram_ce;
     cy7c199 ram_mod(
         .a      ({3'b0, ram_address}),
         .we     (weram_bar),
         .oe     (1'b0),
-        .ce     (clk | csram_bar),
+        .ce     (ram_ce),
         .data_i (databus),
         .data_o (databus)
     );
@@ -123,7 +131,7 @@ module hummingbird(
     wire [7:0] instruction;
     ttl_74377 inst_fetch_mod(
         .clk    (clk),
-        .e      (|phase),
+        .e      (phase0),
         .d      (databus),
         .q      (instruction)
     );
@@ -143,7 +151,7 @@ module hummingbird(
 
     wire [4:0] ucode_i;
     assign ucode_i =
-        &instruction[7:4] ?
+        f_inst ?
         {1'b1, instruction[3:0]} :
         {1'b0, instruction[7:4]};
     ucode ucode_mod(
@@ -152,11 +160,10 @@ module hummingbird(
     );
 
     // oprand sign extend, shift
-    wire lih_bar;
-    assign lih_bar = !&instruction[7:5];
+    wire lih;
     wire [7:0] oprnd;
-    assign oprnd = lih_bar ? { {4{instruction[3]}}, instruction[3:0] } :
-                             { instruction[3:0], 4'b0 };
+    assign oprnd = lih ? {instruction[3:0], 4'b0} :
+                         {{4{instruction[3]}}, instruction[3:0] };
     assign instruction_out = instruction;
 
     wire cnout_bar;
@@ -207,7 +214,25 @@ module hummingbird(
     wire [7:0] alu_word;
 
     wire z_alu;
-    assign z_alu = !(|alu_word);
+    wire [3:0]z_alu_mid;
+    ttl_7402 nor1_mod(
+        .a      (alu_word[3:0]),
+        .b      (alu_word[7:4]),
+        .y      (z_alu_mid)
+    );
+    ttl_7421 and4_1_mod(
+        .a      (z_alu_mid),
+        .b      ({instruction[7:5], 1'b1}),
+        .ya     (z_alu),
+        .yb     (lih)
+    );
+    wire f_inst;
+    wire [2:0] f_inst_unused;
+    ttl_7408 and2_1_mod(
+        .a      ({3'b0, lih}),
+        .b      ({3'b0, instruction[4]}),
+        .y      ({f_inst_unused, f_inst})
+    );
 
     // flag reg
     wire [3:0] flag_word;

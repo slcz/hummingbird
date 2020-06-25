@@ -1,5 +1,5 @@
 #include "hi.asm"
 
-li (0xc3)
+li(0xc3)
 swap
 hlt

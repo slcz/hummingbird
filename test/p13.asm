@@ -1,18 +1,18 @@
 #include "hi.asm"
 
-li (0x59)
+li(0x59)
 cmp data_5a gt
 jc 1f
 2:
-li (0x5b)
+li(0x5b)
 cmp data_5a gt
 jc 2f
 hlt
 2:
-li (0x5a)
+li(0x5a)
 cmp data_5a gt
 jc 1f
-li (0x3)
+li(0x3)
 nop
 hlt
 1: hlt
