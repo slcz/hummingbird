@@ -31,6 +31,7 @@ class I(Enum):
     SHL  = 0xf8
     SHR  = 0xf9
     SHL4 = 0xfa
+    HLT  = 0xfb
     ROL  = 0xfc
     ROR  = 0xfd
     SWAP = 0xfe
@@ -261,7 +262,7 @@ def main(argv):
                     if i != 2:
                         a_register = x
                 cycle += 1 + len(rotate_inst[opc])
-            else:
+            elif opc == I.NOP:
                 # NOP prints status()
                 print("CYCLE {:4d} PC {:4d} A {:4d} {:2x} C {} Z {}".format(
                     cycle,
@@ -271,6 +272,8 @@ def main(argv):
                     int(zflag),
                 ))
                 cycle += 2
+            elif opc == I.HLT:
+                terminate = True
 
         program_counter += 1
     print("CYCLE {:4d} PC {:4d} A {:4d} {:2x} C {} Z {}".format(

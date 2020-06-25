@@ -1,0 +1,1 @@
+g++ -I obj_dir -I/usr/share/verilator/include hummingbird.cpp /usr/share/verilator/include/verilated.cpp obj_dir/Vhummingbird__ALL.a -o hummingbird

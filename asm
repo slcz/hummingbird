@@ -69,6 +69,7 @@ class TOKEN(Enum):
     XOR_INST    = 79
     LIH_INST    = 80
     NOP_INST    = 81
+    HLT_INST    = 82
 
     END         = 100
 
@@ -85,6 +86,7 @@ inst = {
     TOKEN.SHL_INST:   [1, 8, 0xf8],
     TOKEN.SHR_INST:   [1, 8, 0xf9],
     TOKEN.SHL4_INST:  [1, 8, 0xfa],
+    TOKEN.HLT_INST:   [1, 8, 0xfb],
     TOKEN.ROL_INST:   [1, 8, 0xfc],
     TOKEN.ROR_INST:   [1, 8, 0xfd],
     TOKEN.SWAP_INST:  [1, 8, 0xfe],
@@ -126,6 +128,7 @@ keyword = {
     "ror":  TOKEN.ROR_INST,
     "swap": TOKEN.SWAP_INST,
     "asr":  TOKEN.ASR_INST,
+    "hlt":  TOKEN.HLT_INST,
 
     "ld":   TOKEN.LD_INST,
     "st":   TOKEN.ST_INST,

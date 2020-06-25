@@ -18,7 +18,9 @@ module hummingbird(
     output [1:0] rammod_out,
     output [11:0] ram_address_out,
     output fetch_en_out,
-    output [5:0] alu_mode
+    output [5:0] alu_mode,
+    output nop_out,
+    output hlt_out
 );
     wire unused;
 	wire bootloader_pulse;
@@ -128,6 +130,8 @@ module hummingbird(
     assign fetch_en_out = |phase;
 
     // ucode
+    assign nop_out = bootloader_done && (ucode_i == 5'b10001);
+    assign hlt_out = bootloader_done && (ucode_i == 5'b11011);
     wire [15:0] control_signals;
     assign {
         incpc, loadpc_bar, loada_bar, loadf_bar, cn_bar, m,
@@ -149,7 +153,7 @@ module hummingbird(
 
     // oprand sign extend, shift
     wire lih_bar;
-    assign lih_bar = | instruction[7:5];
+    assign lih_bar = !&instruction[7:5];
     wire [7:0] oprnd;
     assign oprnd = lih_bar ? { {4{instruction[3]}}, instruction[3:0] } :
                              { instruction[3:0], 4'b0 };

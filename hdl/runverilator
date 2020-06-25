@@ -1,0 +1,1 @@
+verilator -unused-regexp -Wall -cc hummingbird.v
