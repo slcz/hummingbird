@@ -5,6 +5,7 @@
 module hummingbird(
     input rst_bar,
     input clk,
+    input [7:0]in_idev0,
     output [3:0] phase_out,
     output [11:0] pc_out,
     output bootloader_done_out,
@@ -20,7 +21,9 @@ module hummingbird(
     output fetch_en_out,
     output [5:0] alu_mode,
     output nop_out,
-    output hlt_out
+    output hlt_out,
+    output [7:0] out_odev0,
+    output [7:0] out_odev1
 );
     wire unused;
 	wire bootloader_pulse;
@@ -223,12 +226,11 @@ module hummingbird(
 
     // A reg
     assign a_register_rd_out = a_register_rd;
-    reg8b_3state a_register_mod(
+    reg8b_2state a_register_mod(
         .clk    (clk),
         .d_in   (alu_word),
         .d_out  (a_register_rd),
-        .wr_bar (loada_bar),
-        .rd_bar (1'b0)
+        .r_w    (loada_bar)
     );
     wire [7:0] alu_word;
 
@@ -271,21 +273,23 @@ module hummingbird(
         .y (ram_chip_sel)
     );
 
-    wire [7:0] out_odev0;
-    reg8b_3state odev0_mod(
-        .clk    (clk),
+    reg8b_2state odev0_mod(
+        .clk,
         .d_in   (databus),
         .d_out  (out_odev0),
-        .wr_bar (csram_bar | weram_bar | ram_chip_sel | ram_address[0]),
-        .rd_bar (1'b0)
+        .r_w    (csram_bar | weram_bar | ram_chip_sel | ram_address[0])
     );
 
-    wire [7:0] out_odev1;
-    reg8b_3state odev1_mod(
-        .clk    (clk),
+    reg8b_2state odev1_mod(
+        .clk,
         .d_in   (databus),
         .d_out  (out_odev1),
-        .wr_bar (csram_bar | weram_bar | addr_decode_ram_sel | ram_address[1]),
-        .rd_bar (1'b0)
+        .r_w    (csram_bar | weram_bar | ram_chip_sel | ram_address[1])
+    );
+    ttl_74374 idev0_mod(
+        .ocbar  (csram_bar | ram_chip_sel | ram_address[2]),
+        .clk,
+        .d (in_idev0),
+        .q (databus)
     );
 endmodule

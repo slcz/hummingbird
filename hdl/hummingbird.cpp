@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <cassert>
+#include <fstream>
 #include "Vhummingbird.h"
 #include "verilated.h"
 
@@ -11,6 +12,17 @@ int main(int argc, char **argv)
 {
     Verilated::commandArgs(argc, argv);
     auto top = new Vhummingbird;
+    std::vector<int> input_stream;
+
+    if (argc > 1) {
+        std::ifstream file(argv[1]);
+        while (!file.eof()) {
+            int x;
+            file >> std::hex >> x;
+            input_stream.push_back(x);
+        }
+    }
+    auto it = input_stream.begin();
 
     top->rst_bar = 0;
     top->eval();
@@ -22,14 +34,17 @@ int main(int argc, char **argv)
 
 	bool hlt = false;
 	bool nop = false;
+    bool bootloader_done = false;
 
 	int cycles = 1;
 	while (hlt == false) {
-        int phase, bootloader_done, pc, control_signals, a_reg, instruction;
+        int phase, pc, control_signals, a_reg, instruction;
         int oprnd, alu, ramaddress, rammod;
         int ram_word, alumode;
+        int out0, out1;
 
         // toggle clock
+        top->in_idev0 = bootloader_done && it != input_stream.end() ? *it++ : 0;
         top->clk = 1;
         top->eval();
         top->clk = 0;
@@ -51,6 +66,8 @@ int main(int argc, char **argv)
             ramaddress = top->ram_address_out;
             rammod = top->rammod_out;
             alumode = top->alu_mode;
+            out0 = top->out_odev0;
+            out1 = top->out_odev1;
             std::cout <<
                 std::hex <<
                 " cycles  " << std::setw(4) << cycles <<
@@ -65,6 +82,8 @@ int main(int argc, char **argv)
                 " ramaddr " << std::setw(5) << ramaddress <<
                 " rammod  " << rammod <<
                 " alumode " << std::setw(2) << alumode <<
+                " output0 " << std::setw(4) << out0 <<
+                " output1 " << std::setw(4) << out1 <<
                 std::endl;
         }
 
