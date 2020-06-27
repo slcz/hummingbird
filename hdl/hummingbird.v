@@ -150,10 +150,14 @@ module hummingbird(
     assign control_signals_out = control_signals;
 
     wire [4:0] ucode_i;
-    assign ucode_i =
-        f_inst ?
-        {1'b1, instruction[3:0]} :
-        {1'b0, instruction[7:4]};
+    ttl_74157 ucode_input_sel_mod(
+        .abarb (f_inst),
+        .a (instruction[7:4]),
+        .b (instruction[3:0]),
+        .y (ucode_i[3:0]),
+        .gbar (1'b0)
+    );
+    assign ucode_i[4] = f_inst;
     ucode ucode_mod(
         .i ({ucode_i, c_bar, z, bootloader_done, phase}),
         .o (control_signals)
@@ -162,8 +166,20 @@ module hummingbird(
     // oprand sign extend, shift
     wire lih;
     wire [7:0] oprnd;
-    assign oprnd = lih ? {instruction[3:0], 4'b0} :
-                         {{4{instruction[3]}}, instruction[3:0] };
+    ttl_74157 oprnd_sel_lo_mod(
+        .abarb (lih),
+        .a (instruction[3:0]),
+        .b (4'b0),
+        .y (oprnd[3:0]),
+        .gbar (1'b0)
+    );
+    ttl_74157 oprnd_sel_hi_mod(
+        .abarb (lih),
+        .a ({4{instruction[3]}}),
+        .b (instruction[3:0]),
+        .y (oprnd[7:4]),
+        .gbar (1'b0)
+    );
     assign instruction_out = instruction;
 
     wire cnout_bar;
@@ -208,8 +224,8 @@ module hummingbird(
         .clk    (clk),
         .d_in   (alu_word),
         .d_out  (a_register_rd),
-        .wr     (!loada_bar),
-        .rd     (1'b1)
+        .wr_bar (loada_bar),
+        .rd_bar (1'b0)
     );
     wire [7:0] alu_word;
 
@@ -242,8 +258,8 @@ module hummingbird(
         .clk    (clk),
         .d_in   ({2'b0, cnout_bar, z_alu}),
         .d_out  (flag_word),
-        .wr     (!loadf_bar),
-        .rd     (1'b1)
+        .wr_bar (loadf_bar),
+        .rd_bar (1'b0)
     );
 
 endmodule
