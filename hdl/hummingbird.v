@@ -93,12 +93,15 @@ module hummingbird(
     ttl_7432 or1_mod(
         .a      ({phase02,    phase[0], phase[1], clk}),
         .b      ({phase13,    phase[3], phase[2], csram_bar}),
-        .y      ({phase0,     phase02,  phase13, ram_ce})
+        .y      ({phase0,     phase02,  phase13, ram_ce0})
     );
+
+    wire ram_chip_sel;
+    assign ram_ce = ram_ce0 | !ram_chip_sel;
 
     // RAM
     wire [11:0] ram_address;
-    wire ram_ce;
+    wire ram_ce0, ram_ce;
     cy7c199 ram_mod(
         .a      ({3'b0, ram_address}),
         .we     (weram_bar),
@@ -262,4 +265,27 @@ module hummingbird(
         .rd_bar (1'b0)
     );
 
+    wire addr_decode_ram_sel;
+    ttl_7430 addr_decode_mod(
+        .a (ram_address[11:4]),
+        .y (ram_chip_sel)
+    );
+
+    wire [7:0] out_odev0;
+    reg8b_3state odev0_mod(
+        .clk    (clk),
+        .d_in   (databus),
+        .d_out  (out_odev0),
+        .wr_bar (csram_bar | weram_bar | ram_chip_sel | ram_address[0]),
+        .rd_bar (1'b0)
+    );
+
+    wire [7:0] out_odev1;
+    reg8b_3state odev1_mod(
+        .clk    (clk),
+        .d_in   (databus),
+        .d_out  (out_odev1),
+        .wr_bar (csram_bar | weram_bar | addr_decode_ram_sel | ram_address[1]),
+        .rd_bar (1'b0)
+    );
 endmodule
