@@ -43,11 +43,12 @@ module hummingbird(
 
     // 7474 => bootloader_done, delays one cycle, since bootloader is set
     // when PC = 12'b1.
+    wire bl_done_in;
     ttl_7474 bootloader_done_mod(
         .rd1  (rst_bar),
         .sd1  (1'b1),
         .clk1 (clk),
-        .d1   (!bootloader_pulse ? bootloader_done : 1'b1),
+        .d1   (bl_done_in),
         .q1   (bootloader_done),
         .qbar1(bootloader_done_inv),
 
@@ -57,6 +58,12 @@ module hummingbird(
         .d2   (rst_pb_bar),
         .q2   (rst_bar),
         .qbar2(unused)
+    );
+
+    ttl_7432 or2_mod(
+        .a      ({bootloader_pulse, 3'b0}),
+        .b      ({bootloader_done,  3'b0}),
+        .y      ({bl_done_in,       unused, unused, unused})
     );
 
     // phase signal
