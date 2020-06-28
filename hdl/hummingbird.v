@@ -120,11 +120,11 @@ module hummingbird(
 
     wire [7:0] address_word_lo8;
     // lock the ram output
-    reg8b_2state address_lock_mod(
+    ttl_74374  address_lock_mod(
+        .ocbar  (0'b0),
         .clk    (clk),
-        .d_in   (databus),
-        .d_out  (address_word_lo8),
-        .r_w    (0'b0)
+        .d      (databus),
+        .q      (address_word_lo8)
     );
 
     // Address mux
