@@ -18,4 +18,11 @@ module cy7c199(
             memory[a] <= data_i;
         end
     end
+    integer i;
+    initial begin
+        for (i = 0; i < 32767; i ++)
+        begin
+            memory[i] = 0;
+        end
+    end
 endmodule

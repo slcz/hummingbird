@@ -17,5 +17,5 @@ module ttl_74173(
         else if (!e1 & !e2 & clk)
             data <= d;
     end
-
+    initial data = $random();
 endmodule

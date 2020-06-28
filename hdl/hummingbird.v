@@ -75,6 +75,17 @@ module hummingbird(
     );
 
     wire [7:0] databus;
+    wire [7:0] databus_1;
+    wire [7:0] databus_2;
+    wire [7:0] databus_3;
+    wire [7:0] databus_4;
+    wire [7:0] databus_5;
+
+    assign databus = databus_1;
+    assign databus = databus_2;
+    assign databus = databus_3;
+    assign databus = databus_4;
+    assign databus = databus_5;
 
     // program counter
     wire [11:0] pc;
@@ -95,7 +106,7 @@ module hummingbird(
         .we     (1'b1),
         .oe     (1'b0),
         .ce     (bootloader_done),
-        .io     (databus)
+        .io     (databus_1)
     );
     wire ram_en_bar;
 
@@ -117,7 +128,7 @@ module hummingbird(
         .oe     (1'b0),
         .ce     (ram_ce),
         .data_i (databus),
-        .data_o (databus)
+        .data_o (databus_2)
     );
     assign rammod_out[0] = databus === 8'bz;
     assign io_address_out = io_address;
@@ -204,14 +215,14 @@ module hummingbird(
     ttl_74244 databus_buf_1(
         .oe     ({oealu_bar, oealu_bar}),
         .a      (a_register_rd),
-        .y      (databus)
+        .y      (databus_3)
     );
 
     assign oprnd_out = oprnd;
     ttl_74244 databus_buf_2(
         .oe     ({oeoprnd_bar, oeoprnd_bar}),
         .a      (oprnd),
-        .y      (databus)
+        .y      (databus_4)
     );
     assign databuf2_out = {oeoprnd_bar, oeoprnd_bar, oprnd, databus};
 
@@ -307,6 +318,6 @@ module hummingbird(
         .ocbar  (iodevice_sel[5]),
         .clk,
         .d      (in_idev0),
-        .q      (databus)
+        .q      (databus_5)
     );
 endmodule
