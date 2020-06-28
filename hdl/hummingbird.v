@@ -44,12 +44,12 @@ module hummingbird(
     // when PC = 12'b1.
     wire bl_done_in;
     ttl_7474 bootloader_done_mod(
-        .rd1  (rst_bar),
-        .sd1  (1'b1),
+        .rd1  (1'b1),
+        .sd1  (rst_bar),
         .clk1 (clk),
         .d1   (bl_done_in),
-        .q1   (bootloader_done),
-        .qbar1(bootloader_done_inv),
+        .qbar1(bootloader_done),
+        .q1   (bootloader_done_inv),
 
         .rd2  (1'b1),
         .sd2  (1'b1),
@@ -59,17 +59,12 @@ module hummingbird(
         .qbar2(unused)
     );
 
-    ttl_7432 or2_mod(
-        .a      ({bootloader_pulse, 3'b0}),
-        .b      ({bootloader_done,  3'b0}),
-        .y      ({bl_done_in,       unused, unused, unused})
-    );
-
     // phase signal
     wire [3:0] phase;
+    wire phase_reset_in;
     assign phase_out = phase;
     ttl_74163 phase_mod(
-        .Clear_bar (rst_bar & phase_reset),
+        .Clear_bar (phase_reset_in),
         .Load_bar  (1'b1),
         .Clk       (clk),
         .ENP       (1'b1),
@@ -105,14 +100,14 @@ module hummingbird(
     ttl_7432 or1_mod(
         .a      ({phase02,    phase[0], phase[1], clk}),
         .b      ({phase13,    phase[3], phase[2], csram_bar}),
-        .y      ({phase0,     phase02,  phase13,  io_sel})
+        .y      ({phase0,     phase02,  phase13,  ram_en_bar})
     );
 
-    wire ram_device_sel;
+    wire io_device_sel;
 
     // RAM
     wire [11:0] io_address;
-    wire io_sel, ram_ce;
+    wire ram_en_bar, ram_ce;
     cy7c199 ram_mod(
         .a      ({3'b0, io_address}),
         .we     (weram_bar),
@@ -251,16 +246,17 @@ module hummingbird(
     );
     ttl_7421 and4_1_mod(
         .a      (z_alu_mid),
-        .b      ({instruction[7:5], 1'b1}),
+        .b      ({io_address[11:8]}),
         .ya     (z_alu),
-        .yb     (lih)
+        .yb     (io_device_sel)
     );
     wire f_inst;
-    wire [2:0] f_inst_unused;
+    wire [1:0] f_inst_unused;
+    wire inst76_and;
     ttl_7408 and2_1_mod(
-        .a      ({3'b0, lih}),
-        .b      ({3'b0, instruction[4]}),
-        .y      ({f_inst_unused, f_inst})
+        .a({instruction[7],inst76_and,     rst_bar, instruction[4]}),
+        .b({instruction[6],instruction[5], phase_reset, lih}),
+        .y({inst76_and,    lih,            phase_reset_in, f_inst})
     );
 
     // flag reg
@@ -276,23 +272,18 @@ module hummingbird(
     );
 
     wire addr_decode_ram_sel;
-    // io_address = {8'b1, 4'bx} => IO devices
-    ttl_7430 addr_decode_mod(
-        .a (io_address[11:4]),
-        .y (ram_device_sel)
-    );
 
-    wire x1, x2, io_ce_high;
+    wire x1;
     ttl_7402 nor2_mod(
-        .a      ({bootloader_done_inv, x1,     x2, csram_bar}),
-        .b      ({ram_device_sel,  io_sel,   1'b0, ram_device_sel}),
-        .y      ({x1,                  x2, ram_ce, io_ce_high})
+        .a      ({1'b0,   io_device_sel, x1,     bootloader_pulse}),
+        .b      ({1'b0,   ram_en_bar,    1'b0,   bootloader_done}),
+        .y      ({unused, x1,            ram_ce, bl_done_in})
     );
 
     // 0: odev0, 1: odev1, 2: odev2, 6: idev0
     wire [7:0]iodevice_sel;
     ttl_74138 iodevice_sel_mod(
-        .e      ({io_ce_high, 1'b0, 1'b0}),
+        .e      ({io_device_sel, bootloader_done_inv, csram_bar}),
         .a      ({weram_bar, io_address[1:0]}),
         .o      ({iodevice_sel})
     );
