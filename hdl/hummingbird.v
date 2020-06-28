@@ -23,8 +23,7 @@ module hummingbird(
     output nop_out,
     output hlt_out,
     output [7:0] out_odev0,
-    output [7:0] out_odev1,
-    output [7:0] out_odev2
+    output [7:0] out_odev1
 );
     wire unused;
 	wire bootloader_pulse;
@@ -312,15 +311,8 @@ module hummingbird(
         .r_w    (iodevice_sel[1])
     );
 
-    reg8b_2state odev2_mod(
-        .clk,
-        .d_in   (databus),
-        .d_out  (out_odev2),
-        .r_w    (iodevice_sel[2])
-    );
-
     ttl_74374 idev0_mod(
-        .ocbar  (iodevice_sel[6]),
+        .ocbar  (iodevice_sel[5]),
         .clk,
         .d      (in_idev0),
         .q      (databus)

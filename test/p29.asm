@@ -1,6 +1,6 @@
 #include "hi.asm"
 
-io0 = 0xff2
+io0 = 0xff1
 
 li(0x5a)
 st io0
