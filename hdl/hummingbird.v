@@ -74,6 +74,8 @@ module hummingbird(
         .Q         (phase)
     );
 
+    wire [7:0] databus;
+
     // program counter
     wire [11:0] pc;
     assign pc_out = pc;
@@ -95,6 +97,7 @@ module hummingbird(
         .ce     (bootloader_done),
         .io     (databus)
     );
+    wire ram_en_bar;
 
     wire phase0, phase02, phase13;
     ttl_7432 or1_mod(
@@ -107,7 +110,7 @@ module hummingbird(
 
     // RAM
     wire [11:0] io_address;
-    wire ram_en_bar, ram_ce;
+    wire ram_ce;
     cy7c199 ram_mod(
         .a      ({3'b0, io_address}),
         .we     (weram_bar),
@@ -122,7 +125,7 @@ module hummingbird(
     wire [7:0] address_word_lo8;
     // lock the ram output
     ttl_74374  address_lock_mod(
-        .ocbar  (0'b0),
+        .ocbar  (1'b0),
         .clk    (clk),
         .d      (databus),
         .q      (address_word_lo8)
@@ -158,6 +161,7 @@ module hummingbird(
 
     assign control_signals_out = control_signals;
 
+    wire f_inst;
     wire [4:0] ucode_i;
     ttl_74157 ucode_input_sel_mod(
         .abarb (f_inst),
@@ -192,8 +196,6 @@ module hummingbird(
     assign instruction_out = instruction;
 
     wire cnout_bar;
-    wire [7:0] alu_word;
-    wire [7:0] databus;
     wire [7:0] a_register_rd;
 
     assign ram_word_out = databus;
@@ -214,6 +216,7 @@ module hummingbird(
     assign databuf2_out = {oeoprnd_bar, oeoprnd_bar, oprnd, databus};
 
     // ALU
+    wire [7:0] alu_word;
     assign alu_out = alu_word;
     alu8b alu_mod(
         .A      (a_register_rd),
@@ -235,7 +238,6 @@ module hummingbird(
         .d_out  (a_register_rd),
         .r_w    (loada_bar)
     );
-    wire [7:0] alu_word;
 
     wire z_alu;
     wire [3:0]z_alu_mid;
@@ -250,7 +252,6 @@ module hummingbird(
         .ya     (z_alu),
         .yb     (io_device_sel)
     );
-    wire f_inst;
     wire [1:0] f_inst_unused;
     wire inst76_and;
     ttl_7408 and2_1_mod(

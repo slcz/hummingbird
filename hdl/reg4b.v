@@ -6,7 +6,7 @@ module reg4b(
     input rd_bar
 );
     ttl_74173 reg_lo(
-        .rst (0'b0),
+        .rst (1'b0),
         .clk,
         .d (d_in),
         .q (d_out),

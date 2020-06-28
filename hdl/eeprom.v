@@ -1,6 +1,6 @@
 // at28c64
 
-module eeprom #(parameter string name[8] = "rom0.mem")(
+module eeprom #(parameter name = "rom0.mem")(
     input [12:0] a,
     input we,
     input oe,
