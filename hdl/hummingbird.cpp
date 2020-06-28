@@ -24,12 +24,12 @@ int main(int argc, char **argv)
     }
     auto it = input_stream.begin();
 
-    top->rst_bar = 0;
+    top->rst_pb_bar = 0;
     top->eval();
     top->clk = 1;
     top->eval();
     top->clk = 0;
-    top->rst_bar = 1;
+    top->rst_pb_bar = 1;
     top->eval();
 
 	bool hlt = false;
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
         int phase, pc, control_signals, a_reg, instruction;
         int oprnd, alu, ramaddress, rammod;
         int ram_word, alumode;
-        int out0, out1;
+        int out0, out1, out2;
 
         // toggle clock
         top->in_idev0 = bootloader_done && it != input_stream.end() ? *it++ : 0;
@@ -63,11 +63,12 @@ int main(int argc, char **argv)
             ram_word = top->ram_word_out;
             a_reg = top->a_register_rd_out;
             instruction = top->instruction_out;
-            ramaddress = top->ram_address_out;
+            ramaddress = top->io_address_out;
             rammod = top->rammod_out;
             alumode = top->alu_mode;
             out0 = top->out_odev0;
             out1 = top->out_odev1;
+            out2 = top->out_odev2;
             std::cout <<
                 std::hex <<
                 " cycles  " << std::setw(4) << cycles <<
@@ -84,6 +85,7 @@ int main(int argc, char **argv)
                 " alumode " << std::setw(2) << alumode <<
                 " output0 " << std::setw(4) << out0 <<
                 " output1 " << std::setw(4) << out1 <<
+                " output2 " << std::setw(4) << out2 <<
                 std::endl;
         }
 

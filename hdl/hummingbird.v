@@ -3,9 +3,9 @@
 //
 
 module hummingbird(
-    input rst_bar,
+    input rst_pb_bar,
     input clk,
-    input [7:0]in_idev0,
+    input  [7:0]in_idev0,
     output [3:0] phase_out,
     output [11:0] pc_out,
     output bootloader_done_out,
@@ -17,24 +17,27 @@ module hummingbird(
     output [7:0] alu_out,
     output [17:0] databuf2_out,
     output [1:0] rammod_out,
-    output [11:0] ram_address_out,
+    output [11:0] io_address_out,
     output fetch_en_out,
     output [5:0] alu_mode,
     output nop_out,
     output hlt_out,
     output [7:0] out_odev0,
-    output [7:0] out_odev1
+    output [7:0] out_odev1,
+    output [7:0] out_odev2
 );
     wire unused;
 	wire bootloader_pulse;
     wire bootloader_delay;
     wire bootloader_done;
+    wire bootloader_done_inv;
     wire c_bar, z;
     // control signals
     wire incpc, loadpc_bar, loada_bar, loadf_bar, cn_bar, m;
     wire [3:0] s;
     wire loadaddr_bar, csram_bar, weram_bar, oealu_bar,
          oeoprnd_bar, phase_reset;
+    wire rst_bar;
 
     assign bootloader_done_out = bootloader_done;
 
@@ -44,15 +47,15 @@ module hummingbird(
         .rd1  (rst_bar),
         .sd1  (1'b1),
         .clk1 (clk),
-        .d1   (bootloader_pulse),
-        .q1   (bootloader_delay),
-        .qbar1(unused),
+        .d1   (!bootloader_pulse ? bootloader_done : 1'b1),
+        .q1   (bootloader_done),
+        .qbar1(bootloader_done_inv),
 
-        .rd2  (rst_bar),
+        .rd2  (1'b1),
         .sd2  (1'b1),
-        .clk2 (bootloader_delay),
-        .d2   (1'b1),
-        .q2   (bootloader_done),
+        .clk2 (clk),
+        .d2   (rst_pb_bar),
+        .q2   (rst_bar),
         .qbar2(unused)
     );
 
@@ -96,17 +99,16 @@ module hummingbird(
     ttl_7432 or1_mod(
         .a      ({phase02,    phase[0], phase[1], clk}),
         .b      ({phase13,    phase[3], phase[2], csram_bar}),
-        .y      ({phase0,     phase02,  phase13, ram_ce0})
+        .y      ({phase0,     phase02,  phase13,  io_sel})
     );
 
-    wire ram_chip_sel;
-    assign ram_ce = ram_ce0 | !ram_chip_sel;
+    wire ram_device_sel;
 
     // RAM
-    wire [11:0] ram_address;
-    wire ram_ce0, ram_ce;
+    wire [11:0] io_address;
+    wire io_sel, ram_ce;
     cy7c199 ram_mod(
-        .a      ({3'b0, ram_address}),
+        .a      ({3'b0, io_address}),
         .we     (weram_bar),
         .oe     (1'b0),
         .ce     (ram_ce),
@@ -114,7 +116,7 @@ module hummingbird(
         .data_o (databus)
     );
     assign rammod_out[0] = databus === 8'bz;
-    assign ram_address_out = ram_address;
+    assign io_address_out = io_address;
 
     wire [7:0] address_word_lo8;
     // lock the ram output
@@ -130,7 +132,7 @@ module hummingbird(
         .abarb (loadaddr_bar),
         .a     ({instruction[3:0], address_word_lo8}),
         .b     (pc),
-        .y     (ram_address)
+        .y     (io_address)
     );
 
     // Fetch register, fetch at phase 0
@@ -268,28 +270,52 @@ module hummingbird(
     );
 
     wire addr_decode_ram_sel;
+    // io_address = {8'b1, 4'bx} => IO devices
     ttl_7430 addr_decode_mod(
-        .a (ram_address[11:4]),
-        .y (ram_chip_sel)
+        .a (io_address[11:4]),
+        .y (ram_device_sel)
+    );
+
+    wire x1, x2, io_ce_high;
+    ttl_7402 nor2_mod(
+        .a      ({bootloader_done_inv, x1,     x2, csram_bar}),
+        .b      ({ram_device_sel,  io_sel,   1'b0, ram_device_sel}),
+        .y      ({x1,                  x2, ram_ce, io_ce_high})
+    );
+
+    // 0: odev0, 1: odev1, 2: odev2, 6: idev0
+    wire [7:0]iodevice_sel;
+    ttl_74138 iodevice_sel_mod(
+        .e      ({io_ce_high, 1'b0, 1'b0}),
+        .a      ({weram_bar, io_address[1:0]}),
+        .o      ({iodevice_sel})
     );
 
     reg8b_2state odev0_mod(
         .clk,
         .d_in   (databus),
         .d_out  (out_odev0),
-        .r_w    (csram_bar | weram_bar | ram_chip_sel | ram_address[0])
+        .r_w    (iodevice_sel[0])
     );
 
     reg8b_2state odev1_mod(
         .clk,
         .d_in   (databus),
         .d_out  (out_odev1),
-        .r_w    (csram_bar | weram_bar | ram_chip_sel | ram_address[1])
+        .r_w    (iodevice_sel[1])
     );
-    ttl_74374 idev0_mod(
-        .ocbar  (csram_bar | ram_chip_sel | ram_address[2]),
+
+    reg8b_2state odev2_mod(
         .clk,
-        .d (in_idev0),
-        .q (databus)
+        .d_in   (databus),
+        .d_out  (out_odev2),
+        .r_w    (iodevice_sel[2])
+    );
+
+    ttl_74374 idev0_mod(
+        .ocbar  (iodevice_sel[6]),
+        .clk,
+        .d      (in_idev0),
+        .q      (databus)
     );
 endmodule
