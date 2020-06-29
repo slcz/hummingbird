@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name Memory_EEPROM2)(type Legacy)(uri ${KIPRJMOD}/Memory_EEPROM2.lib)(options "")(descr ""))
+  (lib (name Switch)(type Legacy)(uri ${KIPRJMOD}/Switch.lib)(options "")(descr ""))
+)
