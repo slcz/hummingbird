@@ -13,19 +13,6 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-$Comp
-L 74xx:74LS377 FETCH?
-U 1 1 5EF59B4A
-P 7500 4750
-AR Path="/5EF59B4A" Ref="FETCH?"  Part="1" 
-AR Path="/5EF57F2E/5EF59B4A" Ref="FETCH1"  Part="1" 
-F 0 "FETCH1" H 7500 5900 50  0000 C CNN
-F 1 "74LS377" H 7500 5800 50  0000 C CNN
-F 2 "Package_DIP:DIP-16_W7.62mm" H 7500 4750 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74LS377" H 7500 4750 50  0001 C CNN
-	1    7500 4750
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	5500 3800 5500 4950
 Wire Wire Line
@@ -569,18 +556,18 @@ Wire Wire Line
 Wire Wire Line
 	9600 4950 9800 4950
 Wire Wire Line
-	8000 4550 8250 4550
+	8000 4550 8650 4550
 Wire Wire Line
 	9500 5250 9800 5250
 Wire Wire Line
 	9500 4550 9500 5250
 Wire Wire Line
-	8250 4550 8250 2950
+	8650 4550 8650 2950
 Wire Wire Line
-	8250 2950 9300 2950
-Connection ~ 8250 4550
+	8650 2950 9300 2950
+Connection ~ 8650 4550
 Wire Wire Line
-	8250 4550 9500 4550
+	8650 4550 9500 4550
 Wire Wire Line
 	9300 2950 9300 2650
 Wire Wire Line
@@ -733,30 +720,6 @@ F 2 "Package_DIP:DIP-16_W7.62mm" H 1950 2100 50  0001 C CNN
 F 3 "http://www.ti.com/lit/gpn/sn74LS157" H 1950 2100 50  0001 C CNN
 	1    1950 2100
 	1    0    0    -1  
-$EndComp
-$Comp
-L Memory_RAM:CY7C199 SRAM?
-U 1 1 5EF59301
-P 4900 4000
-AR Path="/5EF59301" Ref="SRAM?"  Part="1" 
-AR Path="/5EF57F2E/5EF59301" Ref="SRAM1"  Part="1" 
-F 0 "SRAM1" H 4900 5550 50  0000 C CNN
-F 1 "CY7C199" H 4900 5450 50  0000 C CNN
-F 2 "Package_DIP:DIP-28_W7.62mm" H 4900 4000 50  0001 C CNN
-F 3 "" H 4900 4000 50  0001 C CNN
-	1    4900 4000
-	1    0    0    -1  
-$EndComp
-$Comp
-L 74xx:74LS244 BUF1
-U 1 1 5F4960F7
-P 4300 1750
-F 0 "BUF1" H 4300 2800 50  0000 C CNN
-F 1 "74LS244" H 4300 2700 50  0000 C CNN
-F 2 "Package_DIP:DIP-20_W7.62mm" H 4300 1750 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74LS244" H 4300 1750 50  0001 C CNN
-	1    4300 1750
-	-1   0    0    1   
 $EndComp
 Wire Wire Line
 	10800 4350 11050 4350
@@ -976,10 +939,6 @@ Text Label 6000 6750 0    50   ~ 0
 Text Label 4050 4700 2    50   ~ 0
 ~ram_ce~
 Wire Wire Line
-	4800 6200 4950 6200
-Text GLabel 4950 6200 2    50   Output ~ 0
-io_ce
-Wire Wire Line
 	2450 1400 2450 1500
 Connection ~ 2450 1500
 Wire Wire Line
@@ -1012,11 +971,7 @@ F 3 "http://www.ti.com/lit/gpn/sn74LS08" H 8750 5950 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	8000 4650 8600 4650
-Wire Wire Line
-	8600 4650 8600 5500
-Wire Wire Line
-	8500 4750 8500 5400
+	8500 4850 8500 5400
 Wire Wire Line
 	8500 5400 7750 5400
 Wire Wire Line
@@ -1025,10 +980,6 @@ Wire Wire Line
 	7750 5950 7850 5950
 Wire Wire Line
 	8400 6050 8450 6050
-Wire Wire Line
-	8400 4850 8400 5300
-Wire Wire Line
-	8400 5300 7850 5300
 Wire Wire Line
 	7850 5300 7850 5750
 Wire Wire Line
@@ -1085,7 +1036,7 @@ Connection ~ 3150 5850
 Wire Wire Line
 	3150 5850 3150 6800
 Wire Wire Line
-	4050 5700 4800 5700
+	4050 5700 4750 5700
 Wire Wire Line
 	5400 5800 5400 6650
 $Comp
@@ -1099,9 +1050,6 @@ F 3 "http://www.ti.com/lit/gpn/sn74ls02" H 5100 5800 50  0001 C CNN
 	1    5100 5800
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	4800 5900 4800 6200
-Connection ~ 4800 5900
 $Comp
 L 74xx:74LS02 U5
 U 2 1 5F1D57BF
@@ -1114,13 +1062,28 @@ F 3 "http://www.ti.com/lit/gpn/sn74ls02" H 5700 6750 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	8000 4850 8400 4850
+	8000 4950 8000 5300
 Wire Wire Line
-	8000 4750 8500 4750
-Wire Bus Line
-	5250 750  5250 2450
-Wire Bus Line
-	11150 750  11150 5450
+	8000 5300 7850 5300
+Wire Wire Line
+	8000 4850 8500 4850
+Wire Wire Line
+	8000 4750 8600 4750
+Wire Wire Line
+	8600 4750 8600 5500
+$Comp
+L 74xx:74LS377 FETCH?
+U 1 1 5EF59B4A
+P 7500 4750
+AR Path="/5EF59B4A" Ref="FETCH?"  Part="1" 
+AR Path="/5EF57F2E/5EF59B4A" Ref="FETCH1"  Part="1" 
+F 0 "FETCH1" H 7500 5900 50  0000 C CNN
+F 1 "74LS377" H 7500 5800 50  0000 C CNN
+F 2 "Package_DIP:DIP-16_W7.62mm" H 7500 4750 50  0001 C CNN
+F 3 "http://www.ti.com/lit/gpn/sn74LS377" H 7500 4750 50  0001 C CNN
+	1    7500 4750
+	1    0    0    -1  
+$EndComp
 $Comp
 L 74xx:74LS374 ADDRESS_LOCK1
 U 1 1 5F380B53
@@ -1132,4 +1095,39 @@ F 3 "http://www.ti.com/lit/gpn/sn74LS374" H 7500 2600 50  0001 C CNN
 	1    7500 2600
 	1    0    0    -1  
 $EndComp
+$Comp
+L Memory_RAM:CY7C199 SRAM?
+U 1 1 5EF59301
+P 4900 4000
+AR Path="/5EF59301" Ref="SRAM?"  Part="1" 
+AR Path="/5EF57F2E/5EF59301" Ref="SRAM1"  Part="1" 
+F 0 "SRAM1" H 4900 5550 50  0000 C CNN
+F 1 "CY7C199" H 4900 5450 50  0000 C CNN
+F 2 "Package_DIP:DIP-28_W7.62mm" H 4900 4000 50  0001 C CNN
+F 3 "" H 4900 4000 50  0001 C CNN
+	1    4900 4000
+	1    0    0    -1  
+$EndComp
+$Comp
+L 74xx:74LS244 OPERAND_BUF1
+U 1 1 5F4960F7
+P 4300 1750
+F 0 "OPERAND_BUF1" H 4300 2800 50  0000 C CNN
+F 1 "74LS244" H 4300 2700 50  0000 C CNN
+F 2 "Package_DIP:DIP-20_W7.62mm" H 4300 1750 50  0001 C CNN
+F 3 "http://www.ti.com/lit/gpn/sn74LS244" H 4300 1750 50  0001 C CNN
+	1    4300 1750
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	4750 5700 4750 6350
+Wire Bus Line
+	5250 750  5250 2450
+Wire Bus Line
+	11150 750  11150 5450
+Connection ~ 4750 5700
+Wire Wire Line
+	4750 5700 4800 5700
+Text GLabel 4750 6350 3    50   Output ~ 0
+io_space
 $EndSCHEMATC

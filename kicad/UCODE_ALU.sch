@@ -43,14 +43,12 @@ Text HLabel 9550 2100 2    50   Input ~ 0
 INST_2
 Text HLabel 9550 1800 2    50   Input ~ 0
 INST_3
-Text HLabel 9550 2800 2    50   Input ~ 0
-INST_4
 Text HLabel 9550 2500 2    50   Input ~ 0
 INST_5
 Text HLabel 9550 2200 2    50   Input ~ 0
 INST_6
 Text HLabel 10700 1700 2    50   Input ~ 0
-INST_7
+INST_4
 $Comp
 L power:GND #PWR066
 U 1 1 5F08BC90
@@ -509,9 +507,9 @@ F 3 "" H 2200 7350 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 Text Label 6300 5300 2    50   ~ 0
-~oealu~
+~areg_o_en~
 Text Label 1700 7050 2    50   ~ 0
-~oealu~
+~areg_o_en~
 Wire Wire Line
 	1700 7050 1700 6950
 Text HLabel 2700 6750 2    50   3State ~ 0
@@ -561,11 +559,7 @@ Connection ~ 9900 1600
 Text GLabel 10500 1500 2    50   Input ~ 0
 lih
 Wire Wire Line
-	10600 1900 9550 1900
-Wire Wire Line
 	10500 1700 10600 1700
-Wire Wire Line
-	10600 1900 10600 1700
 Wire Wire Line
 	10600 1700 10700 1700
 Connection ~ 10600 1700
@@ -818,10 +812,10 @@ F 3 "" H 2200 5750 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L 74xx:74LS244 BUFALU1
+L 74xx:74LS244 AREG_BUF1
 U 1 1 60058AEE
 P 2200 6550
-F 0 "BUFALU1" H 2200 7700 50  0000 C CNN
+F 0 "AREG_BUF1" H 2200 7700 50  0000 C CNN
 F 1 "74LS244" H 2200 7600 50  0000 C CNN
 F 2 "Package_DIP:DIP-20_W7.62mm" H 2200 6550 50  0001 C CNN
 F 3 "http://www.ti.com/lit/gpn/sn74LS244" H 2200 6550 50  0001 C CNN
@@ -988,6 +982,12 @@ Wire Wire Line
 	3450 3050 3300 3050
 Wire Wire Line
 	3450 5200 4000 5200
+Wire Wire Line
+	10600 2800 9550 2800
+Wire Wire Line
+	10600 1700 10600 2800
 Wire Bus Line
 	1300 2000 1300 6850
+Text HLabel 9550 1900 2    50   Input ~ 0
+INST_7
 $EndSCHEMATC

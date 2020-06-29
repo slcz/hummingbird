@@ -148,7 +148,7 @@ F 3 "" H 6250 5550 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 Text Label 7000 1550 0    50   ~ 0
-bl_done_pulse
+pc_overflow
 Text HLabel 8450 1750 2    50   Input ~ 0
 pcld11
 Text HLabel 8450 1850 2    50   Input ~ 0
@@ -781,7 +781,7 @@ Wire Wire Line
 Wire Wire Line
 	6250 6250 6250 5950
 Text GLabel 5550 3000 0    50   Output ~ 0
-bl_not_done
+bl_activ
 Entry Wire Line
 	6950 1750 7050 1850
 Entry Wire Line
@@ -894,8 +894,8 @@ Wire Wire Line
 	4500 2800 4500 1000
 Wire Wire Line
 	4500 2800 4350 2800
-Wire Bus Line
-	7050 1650 7050 6050
 Wire Wire Line
 	4500 2800 4500 6250
+Wire Bus Line
+	7050 1650 7050 6050
 $EndSCHEMATC

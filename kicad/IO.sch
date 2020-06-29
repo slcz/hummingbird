@@ -25,7 +25,7 @@ F 3 "http://www.ti.com/lit/gpn/sn74LS138" H 9250 5200 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 Text GLabel 9750 5000 2    50   Input ~ 0
-io_ce
+io_space
 $Comp
 L power:GND #PWR069
 U 1 1 5F465B46
@@ -589,14 +589,13 @@ Wire Wire Line
 	7050 4150 8400 4150
 Wire Wire Line
 	4600 1000 4600 3200
-Text Label 8750 4900 2    50   ~ 0
+Text Label 8750 5000 2    50   ~ 0
 ~idev1_en~
 Text GLabel 8750 3400 0    50   Input ~ 0
 clk
 Text Label 8750 3500 2    50   ~ 0
 ~idev1_en~
 NoConn ~ 8750 4800
-NoConn ~ 8750 5000
 NoConn ~ 8750 5100
 NoConn ~ 8750 5200
 $Comp
@@ -788,7 +787,7 @@ Connection ~ 7050 5400
 Text GLabel 9750 4900 2    50   Input ~ 0
 ~csram~
 Text GLabel 9750 4800 2    50   Input ~ 0
-bl_not_done
+bl_activ
 $Comp
 L power:VCC #PWR0126
 U 1 1 5F1FE7B1
@@ -800,10 +799,6 @@ F 3 "" H 9250 5800 50  0001 C CNN
 	1    9250 5800
 	-1   0    0    1   
 $EndComp
-Wire Bus Line
-	10700 2400 10700 6400
-Wire Bus Line
-	3000 1000 3000 6400
 $Comp
 L power:GND #PWR045
 U 1 1 5F4C2265
@@ -815,4 +810,9 @@ F 3 "" H 5500 2200 50  0001 C CNN
 	1    5500 2200
 	1    0    0    -1  
 $EndComp
+NoConn ~ 8750 4900
+Wire Bus Line
+	10700 2400 10700 6400
+Wire Bus Line
+	3000 1000 3000 6400
 $EndSCHEMATC
