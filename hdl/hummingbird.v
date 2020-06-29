@@ -3,321 +3,332 @@
 //
 
 module hummingbird(
-    input rst_pb_bar,
-    input clk,
-    input  [7:0]in_idev0,
-    output [3:0] phase_out,
-    output [11:0] pc_out,
-    output bootloader_done_out,
-    output [7:0] ram_word_out,
-    output [15:0] control_signals_out,
-    output [7:0] a_register_rd_out,
-    output [7:0] instruction_out,
-    output [7:0] oprnd_out,
-    output [7:0] alu_out,
-    output [17:0] databuf2_out,
-    output [1:0] rammod_out,
-    output [11:0] io_address_out,
-    output fetch_en_out,
-    output [5:0] alu_mode,
-    output nop_out,
-    output hlt_out,
-    output [7:0] out_odev0,
-    output [7:0] out_odev1
+    input           rst_btn_b,
+    input           clk,
+    input     [7:0] dev0_i,
+    output    [3:0] test_phase,
+    output   [11:0] test_pc,
+    output          test_bl_done,
+    output    [7:0] test_databus,
+    output   [15:0] test_ctrl_sig,
+    output    [7:0] test_a_reg_rd,
+    output    [7:0] test_inst,
+    output    [7:0] test_oprnd_rd,
+    output    [7:0] test_alu_o,
+    output   [17:0] test_oprnd_buf,
+    output   [11:0] test_io_address,
+    output          test_fetch_en,
+    output    [5:0] test_alumode,
+    output          test_nop,
+    output          test_hlt,
+    output    [7:0] test_dev0_data_o,
+    output    [7:0] test_dev1_data_o
 );
-    wire unused;
-	wire bootloader_pulse;
-    wire bootloader_delay;
-    wire bootloader_done;
-    wire bootloader_done_inv;
-    wire c_bar, z;
+    wire pc_overflow;
+    // bootloader completed
+    wire bl_done;
+    wire bl_activ;
+    // carry and zero flags
+    wire c_b, z;
     // control signals
-    wire incpc, loadpc_bar, loada_bar, loadf_bar, cn_bar, m;
+    wire incpc, loadpc_b, load_areg_b, loadf_b, alu_cin_b, m;
     wire [3:0] s;
-    wire loadaddr_bar, csram_bar, weram_bar, oealu_bar,
-         oeoprnd_bar, phase_reset;
-    wire rst_bar;
+    wire address_f_databus_b, csram_b, weram_b, areg_o_en_b;
+    wire oprnd_o_en_b, phase_rst_b;
+    wire rst_b;
 
-    assign bootloader_done_out = bootloader_done;
+    assign test_bl_done = bl_done;
 
-    // 7474 => bootloader_done, delays one cycle, since bootloader is set
-    // when PC = 12'b1.
-    wire bl_done_in;
-    ttl_7474 bootloader_done_mod(
+    // U1: bootload done generator
+    // U2: reset generator
+    // pc overflow signal nor'ed with bl_done feedback
+    wire pc_ovf_bl_done_fb;
+    ttl_7474 reset_bl_flag_gen(
         .rd1  (1'b1),
-        .sd1  (rst_bar),
+        .sd1  (rst_b),
         .clk1 (clk),
-        .d1   (bl_done_in),
-        .qbar1(bootloader_done),
-        .q1   (bootloader_done_inv),
+        .d1   (pc_ovf_bl_done_fb),
+        .qbar1(bl_done),
+        .q1   (bl_activ),
 
         .rd2  (1'b1),
         .sd2  (1'b1),
         .clk2 (clk),
-        .d2   (rst_pb_bar),
-        .q2   (rst_bar),
-        .qbar2(unused)
+        .d2   (rst_btn_b),
+        .q2   (rst_b),
+        .qbar2()
     );
 
     // phase signal
     wire [3:0] phase;
-    wire phase_reset_in;
-    assign phase_out = phase;
-    ttl_74163 phase_mod(
-        .Clear_bar (phase_reset_in),
+    wire phase_rst_b_i;
+    assign test_phase = phase;
+    ttl_74163 phase_gen(
+        .Clear_bar (phase_rst_b_i),
         .Load_bar  (1'b1),
         .Clk       (clk),
         .ENP       (1'b1),
         .ENT       (1'b1),
         .D         (4'b0),
-        .RCO       (unused),
+        .RCO       (),
         .Q         (phase)
     );
 
     wire [7:0] databus;
-    wire [7:0] databus_1;
-    wire [7:0] databus_2;
-    wire [7:0] databus_3;
-    wire [7:0] databus_4;
-    wire [7:0] databus_5;
-
-    assign databus = databus_1;
-    assign databus = databus_2;
-    assign databus = databus_3;
-    assign databus = databus_4;
-    assign databus = databus_5;
 
     // program counter
     wire [11:0] pc;
-    assign pc_out = pc;
-    counter12b pc_mode(
-        .rst    (rst_bar),
+    assign test_pc = pc;
+    counter12b pc_gen(
+        .rst    (rst_b),
         .D      ({instruction[3:0], databus}),
-        .load   (loadpc_bar),
+        .load   (loadpc_b),
         .clk    (clk),
         .incpc  (incpc),
         .Q      (pc),
-        .rco    (bootloader_pulse)
+        .rco    (pc_overflow)
     );
 
     // program store
-    eeprom_wrap program_store_mod(
+    eeprom_wrap program_store(
         .a      ({1'b0, pc}),
         .we     (1'b1),
         .oe     (1'b0),
-        .ce     (bootloader_done),
-        .io     (databus_1)
-    );
-    wire ram_en_bar;
-
-    wire phase0, phase02, phase13;
-    ttl_7432 or1_mod(
-        .a      ({phase02,    phase[0], phase[1], clk}),
-        .b      ({phase13,    phase[3], phase[2], csram_bar}),
-        .y      ({phase0,     phase02,  phase13,  ram_en_bar})
+        .ce     (bl_done),
+        .io     (databus)
     );
 
-    wire io_device_sel;
+    // ram access window is when clock is low and csram control signal
+    // is low.
+    wire ram_access_b;
+
+    wire phase0_b, phase02, phase13;
+    ttl_7432 quad_2in_or(
+        .a      ({ phase02,    phase[0], phase[1], clk         }),
+        .b      ({ phase13,    phase[2], phase[3], csram_b     }),
+        .y      ({phase0_b,    phase02,  phase13,  ram_access_b})
+    );
+
+    wire io_space;
 
     // RAM
     wire [11:0] io_address;
-    wire ram_ce;
-    cy7c199 ram_mod(
+    wire ram_en_b;
+    cy7c199 ram(
         .a      ({3'b0, io_address}),
-        .we     (weram_bar),
+        .we     (weram_b),
         .oe     (1'b0),
-        .ce     (ram_ce),
+        .ce     (ram_en_b),
         .data_i (databus),
-        .data_o (databus_2)
+        .data_o (databus)
     );
-    assign rammod_out[0] = databus === 8'bz;
-    assign io_address_out = io_address;
+    assign test_io_address = io_address;
 
     wire [7:0] address_word_lo8;
-    // lock the ram output
-    ttl_74374  address_lock_mod(
+    // keep the ram output from the last cycle.
+    ttl_74374  address_lock(
         .ocbar  (1'b0),
         .clk    (clk),
         .d      (databus),
         .q      (address_word_lo8)
     );
 
-    // Address mux
-    addrmux addrmux_mod(
-        .abarb (loadaddr_bar),
+    // Address mux: select the address from data bus or program counter
+    addrmux addrmux(
+        .abarb (address_f_databus_b),
         .a     ({instruction[3:0], address_word_lo8}),
         .b     (pc),
         .y     (io_address)
     );
 
-    // Fetch register, fetch at phase 0
+    // Fetch register, fetch instruction at phase 0
     wire [7:0] instruction;
-    ttl_74377 inst_fetch_mod(
+    ttl_74377 inst_fetch(
         .clk    (clk),
-        .e      (phase0),
+        .e      (phase0_b),
         .d      (databus),
         .q      (instruction)
     );
-    assign fetch_en_out = |phase;
+    assign test_fetch_en = |phase;
 
     // ucode
-    assign nop_out = bootloader_done && (ucode_i == 5'b10001);
-    assign hlt_out = bootloader_done && (ucode_i == 5'b11011);
+    assign test_hlt = bl_done && (uc_inst_i == 5'b11011);
     wire [15:0] control_signals;
     assign {
-        incpc, loadpc_bar, loada_bar, loadf_bar, cn_bar, m,
-        s, loadaddr_bar, csram_bar, weram_bar, oealu_bar,
-        oeoprnd_bar, phase_reset
+        incpc,
+        loadpc_b,
+        load_areg_b,
+        loadf_b,
+        alu_cin_b,
+        m,
+        s,
+        address_f_databus_b,
+        csram_b,
+        weram_b,
+        areg_o_en_b,
+        oprnd_o_en_b,
+        phase_rst_b
     } = control_signals;
 
-    assign control_signals_out = control_signals;
+    assign test_ctrl_sig = control_signals;
 
+    // single byte no operand instruction's top nibble is 4'b1111
+    // (F-instruction)
     wire f_inst;
-    wire [4:0] ucode_i;
-    ttl_74157 ucode_input_sel_mod(
+    wire [4:0] uc_inst_i;
+    ttl_74157 uc_inst_input_sel(
         .abarb (f_inst),
         .a (instruction[7:4]),
         .b (instruction[3:0]),
-        .y (ucode_i[3:0]),
+        .y (uc_inst_i[3:0]),
         .gbar (1'b0)
     );
-    assign ucode_i[4] = f_inst;
-    ucode ucode_mod(
-        .i ({ucode_i, c_bar, z, bootloader_done, phase}),
+    assign uc_inst_i[4] = f_inst;
+    // ucode: input instruction + flags + bootloader done + phase
+    //        output 16b control signals
+    ucode ucode_eeprom(
+        .i ({uc_inst_i, c_b, z, bl_done, phase}),
         .o (control_signals)
     );
 
-    // oprand sign extend, shift
+    // oprand sign extend or shift left if LIH
     wire lih;
-    wire [7:0] oprnd;
-    ttl_74157 oprnd_sel_lo_mod(
+    wire [7:0] oprnd8b;
+    ttl_74157 oprnd_sel_lo(
         .abarb (lih),
         .a (instruction[3:0]),
         .b (4'b0),
-        .y (oprnd[3:0]),
+        .y (oprnd8b[3:0]),
         .gbar (1'b0)
     );
-    ttl_74157 oprnd_sel_hi_mod(
+    ttl_74157 oprnd_sel_hi(
         .abarb (lih),
         .a ({4{instruction[3]}}),
         .b (instruction[3:0]),
-        .y (oprnd[7:4]),
+        .y (oprnd8b[7:4]),
         .gbar (1'b0)
     );
-    assign instruction_out = instruction;
+    assign test_inst = instruction;
 
-    wire cnout_bar;
+    wire cn_alu_b;
     wire [7:0] a_register_rd;
 
-    assign ram_word_out = databus;
+    assign test_databus = databus;
 
-    // Data bus
-    ttl_74244 databus_buf_1(
-        .oe     ({oealu_bar, oealu_bar}),
+    // A register output to databus
+    ttl_74244 a_reg_buf(
+        .oe     ({areg_o_en_b, areg_o_en_b}),
         .a      (a_register_rd),
-        .y      (databus_3)
+        .y      (databus)
     );
 
-    assign oprnd_out = oprnd;
-    ttl_74244 databus_buf_2(
-        .oe     ({oeoprnd_bar, oeoprnd_bar}),
-        .a      (oprnd),
-        .y      (databus_4)
+    assign test_oprnd_rd = oprnd8b;
+    // Operand output to databus
+    ttl_74244 oprnd_buf(
+        .oe     ({oprnd_o_en_b, oprnd_o_en_b}),
+        .a      (oprnd8b),
+        .y      (databus)
     );
-    assign databuf2_out = {oeoprnd_bar, oeoprnd_bar, oprnd, databus};
+    assign test_oprnd_buf = {oprnd_o_en_b, oprnd_o_en_b, oprnd8b, databus};
 
     // ALU
-    wire [7:0] alu_word;
-    assign alu_out = alu_word;
-    alu8b alu_mod(
+    wire [7:0] alu_f;
+    assign test_alu_o = alu_f;
+    alu8b alu(
         .A      (a_register_rd),
         .B      (databus),
         .S      (s),
         .M      (m),
-        .cin    (cn_bar),
-        .F      (alu_word),
-        .cout   (cnout_bar),
-        .eq     (unused)
+        .cin    (alu_cin_b),
+        .F      (alu_f),
+        .cout   (cn_alu_b),
+        .eq     ()
     );
-    assign alu_mode = {m, s, cn_bar};
+    assign test_alumode = {m, s, alu_cin_b};
 
     // A reg
-    assign a_register_rd_out = a_register_rd;
-    reg8b_2state a_register_mod(
+    assign test_a_reg_rd = a_register_rd;
+    reg8b_2state a_register(
         .clk    (clk),
-        .d_in   (alu_word),
+        .d_in   (alu_f),
         .d_out  (a_register_rd),
-        .r_w    (loada_bar)
+        .r_w    (load_areg_b)
     );
 
+    // Z flag output from ALU result
     wire z_alu;
     wire [3:0]z_alu_mid;
-    ttl_7402 nor1_mod(
-        .a      (alu_word[3:0]),
-        .b      (alu_word[7:4]),
+    ttl_7402 quad_2_in_nor_1(
+        .a      (alu_f[3:0]),
+        .b      (alu_f[7:4]),
         .y      (z_alu_mid)
     );
-    ttl_7421 and4_1_mod(
+    ttl_7421 dual_4_in_and(
         .a      (z_alu_mid),
         .b      ({io_address[11:8]}),
         .ya     (z_alu),
-        .yb     (io_device_sel)
+        .yb     (io_space)
     );
-    wire [1:0] f_inst_unused;
     wire inst76_and;
-    ttl_7408 and2_1_mod(
-        .a({instruction[7],inst76_and,     rst_bar, instruction[4]}),
-        .b({instruction[6],instruction[5], phase_reset, lih}),
-        .y({inst76_and,    lih,            phase_reset_in, f_inst})
+    // generate lih, phase_rst_b_i and f_inst control signals
+    // lih = &instruction[7:5], either lih or f instructions
+    ttl_7408 quad_2_in_and(
+        .a({instruction[7], inst76_and,     rst_b,          instruction[4]}),
+        .b({instruction[6], instruction[5], phase_rst_b,    lih           }),
+        .y({inst76_and,     lih,            phase_rst_b_i,  f_inst        })
     );
 
     // flag reg
-    wire [3:0] flag_word;
-    assign c_bar = flag_word[1];
-    assign z     = flag_word[0];
-    reg4b flag_register_mod(
+    wire [3:0] flag;
+    assign c_b = flag[1];
+    assign z   = flag[0];
+    reg4b flag_register(
         .clk    (clk),
-        .d_in   ({2'b0, cnout_bar, z_alu}),
-        .d_out  (flag_word),
-        .wr_bar (loadf_bar),
+        .d_in   ({2'b0, cn_alu_b, z_alu}),
+        .d_out  (flag),
+        .wr_bar (loadf_b),
         .rd_bar (1'b0)
     );
 
     wire addr_decode_ram_sel;
 
-    wire x1;
-    ttl_7402 nor2_mod(
-        .a      ({1'b0,   io_device_sel, x1,     bootloader_pulse}),
-        .b      ({1'b0,   ram_en_bar,    1'b0,   bootloader_done}),
-        .y      ({unused, x1,            ram_ce, bl_done_in})
+    wire x1, unused;
+    // ram_en_b = io_space == 1'b0 && ram_access_b == 1'b0
+    // Also latch pc_overflow signal
+    ttl_7402 quad_2_in_nor_2(
+        .a      ({1'b0,   io_space,      x1,       pc_overflow}),
+        .b      ({1'b0,   ram_access_b,  1'b0,     bl_done}),
+        .y      ({unused, x1,            ram_en_b, pc_ovf_bl_done_fb})
     );
 
-    // 0: odev0, 1: odev1, 2: odev2, 6: idev0
-    wire [7:0]iodevice_sel;
-    ttl_74138 iodevice_sel_mod(
-        .e      ({io_device_sel, bootloader_done_inv, csram_bar}),
-        .a      ({weram_bar, io_address[1:0]}),
-        .o      ({iodevice_sel})
+    // 3 bit select IO devices 0 - 7. 0-3 are output devices and 4-7 are
+    // input devices.
+    // Device assignment, 0: odev0, 1: odev1, 5: idev0
+    wire [7:0]device_sel;
+    ttl_74138 device_mux(
+        .e      ({io_space, bl_activ, csram_b}),
+        .a      ({weram_b, io_address[1:0]}),
+        .o      ({device_sel})
     );
 
-    reg8b_2state odev0_mod(
+    reg8b_2state odev0_reg(
         .clk,
         .d_in   (databus),
-        .d_out  (out_odev0),
-        .r_w    (iodevice_sel[0])
+        .d_out  (test_dev0_data_o),
+        .r_w    (device_sel[0])
     );
 
-    reg8b_2state odev1_mod(
+    reg8b_2state odev1_reg(
         .clk,
         .d_in   (databus),
-        .d_out  (out_odev1),
-        .r_w    (iodevice_sel[1])
+        .d_out  (test_dev1_data_o),
+        .r_w    (device_sel[1])
     );
 
-    ttl_74374 idev0_mod(
-        .ocbar  (iodevice_sel[5]),
+    ttl_74374 idev0_reg(
+        .ocbar  (device_sel[5]),
         .clk,
-        .d      (in_idev0),
-        .q      (databus_5)
+        .d      (dev0_i),
+        .q      (databus)
     );
 endmodule

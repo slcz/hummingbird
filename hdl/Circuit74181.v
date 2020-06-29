@@ -14,10 +14,10 @@
 module Circuit74181 (S, A, B, M, CNb, F, X, Y, CN4b, AEB);
 
   input [3:0] A, B, S;
-  input CNb, M; 
+  input CNb, M;
   output [3:0] F;
   output AEB, X, Y, CN4b;
-	
+
   TopLevel74181 Ckt74181 (S, A, B, M, CNb, F, X, Y, CN4b, AEB);
 
 endmodule /* Circuit74181 */
@@ -27,11 +27,11 @@ endmodule /* Circuit74181 */
 module TopLevel74181 (S, A, B, M, CNb, F, X, Y, CN4b, AEB);
 
   input [3:0] A, B, S;
-  input CNb, M; 
+  input CNb, M;
   output [3:0] F;
   output AEB, X, Y, CN4b;
   wire [3:0] E, D, C, Bb;
-  
+
   Emodule Emod1 (A, B, S, E, Bb);
   Dmodule Dmod2 (A, B, Bb, S, D);
   CLAmodule CLAmod3(E, D, CNb, C, X, Y, CN4b);
@@ -75,7 +75,7 @@ module Dmodule (A, B, Bb, S, D);
 
   input [3:0] A, B, Bb, S;
   output [3:0] D;
-  wire [3:0]  BbS1, BS0;  
+  wire [3:0]  BbS1, BS0;
 
   and BbS10gate(BbS1[0], Bb[0], S[1]);
   and BbS11gate(BbS1[1], Bb[1], S[1]);
@@ -99,7 +99,7 @@ endmodule /* Dmodule */
 module CLAmodule(Gb, Pb, CNb, C, X, Y, CN4b);
 
   input [3:0] Gb, Pb;
-  input CNb; 
+  input CNb;
   output [3:0] C;
   output X, Y, CN4b;
 
@@ -142,7 +142,7 @@ endmodule /* CLAmodule */
 module Summodule(E, D, C, M, F, AEB);
 
   input [3:0] E, D, C;
-  input M; 
+  input M;
   output [3:0] F;
   output AEB;
   wire [3:0] EXD, CM;

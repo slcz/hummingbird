@@ -24,50 +24,47 @@ int main(int argc, char **argv)
     }
     auto it = input_stream.begin();
 
-    top->rst_pb_bar = 0;
+    top->rst_btn_b = 0;
     top->eval();
     top->clk = 1;
     top->eval();
     top->clk = 0;
-    top->rst_pb_bar = 1;
+    top->rst_btn_b = 1;
     top->eval();
 
-	bool hlt = false;
-	bool nop = false;
-    bool bootloader_done = false;
+    int hlt = false;
+    int bootloader_done = false;
 
-	int cycles = 1;
-	while (hlt == false) {
+    int cycles = 1;
+    while (hlt == false) {
         int phase, pc, control_signals, a_reg, instruction;
         int oprnd, alu, ramaddress, rammod;
         int ram_word, alumode;
         int out0, out1;
 
         // toggle clock
-        top->in_idev0 = bootloader_done && it != input_stream.end() ? *it++ : 0;
+        top->dev0_i = bootloader_done && it != input_stream.end() ? *it++ : 0;
         top->clk = 1;
         top->eval();
         top->clk = 0;
         top->eval();
 
-		hlt = top->hlt_out;
-		nop = top->nop_out;
-		bootloader_done = top->bootloader_done_out;
-		if (bootloader_done) {
-            phase = top->phase_out;
-            bootloader_done = top->bootloader_done_out;
-            pc = top->pc_out;
-            control_signals = top->control_signals_out;
-            alu = top->alu_out;
-            oprnd = top->oprnd_out;
-            ram_word = top->ram_word_out;
-            a_reg = top->a_register_rd_out;
-            instruction = top->instruction_out;
-            ramaddress = top->io_address_out;
-            rammod = top->rammod_out;
-            alumode = top->alu_mode;
-            out0 = top->out_odev0;
-            out1 = top->out_odev1;
+        hlt = top->test_hlt;
+        bootloader_done = top->test_bl_done;
+        if (bootloader_done) {
+            phase = top->test_phase;
+            bootloader_done = top->test_bl_done;
+            pc = top->test_pc;
+            control_signals = top->test_ctrl_sig;
+            alu = top->test_alu_o;
+            oprnd = top->test_oprnd_rd;
+            ram_word = top->test_databus;
+            a_reg = top->test_a_reg_rd;
+            instruction = top->test_inst;
+            ramaddress = top->test_io_address;
+            alumode = top->test_alumode;
+            out0 = top->test_dev0_data_o;
+            out1 = top->test_dev1_data_o;
             std::cout <<
                 std::hex <<
                 " cycles  " << std::setw(4) << cycles <<
@@ -80,15 +77,15 @@ int main(int argc, char **argv)
                 " oprnd   " << std::setw(2) << oprnd <<
                 " alu     " << std::setw(2) << alu <<
                 " ramaddr " << std::setw(5) << ramaddress <<
-                " rammod  " << rammod <<
                 " alumode " << std::setw(2) << alumode <<
                 " output0 " << std::setw(4) << out0 <<
                 " output1 " << std::setw(4) << out1 <<
+                " hlt     " << hlt <<
                 std::endl;
         }
 
         cycles ++;
     }
 
-	delete top;
+    delete top;
 }

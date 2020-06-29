@@ -4,49 +4,30 @@ module testbench;
 
     wire done = 1'b0;
 
-    wire [7:0]in_idev0;
-    assign in_idev0 = 8'b0;
-    wire [3:0] phase_out;
-    wire [11:0] pc_out;
-    wire bootloader_done_out;
-    wire [7:0] ram_word_out;
-    wire [15:0] control_signals_out;
-    wire [7:0] a_register_rd_out;
-    wire [7:0] instruction_out;
-    wire [7:0] oprnd_out;
-    wire [7:0] alu_out;
-    wire [17:0] databuf2_out;
-    wire [1:0] rammod_out;
-    wire [11:0] io_address_out;
-    wire fetch_en_out;
-    wire [5:0] alu_mode;
-    wire nop_out;
-    wire hlt_out;
-    wire [7:0] out_odev0;
-    wire [7:0] out_odev1;
+    wire [7:0] dev0_i;
+    assign dev0_i = 8'b0;
+    wire is_hlt, test_bl_done;
 
     hummingbird cpu(
-        .rst_pb_bar (reset),
-        .clk        (clock),
-        .in_idev0,
-        .phase_out,
-        .pc_out,
-        .bootloader_done_out,
-        .ram_word_out,
-        .control_signals_out,
-        .a_register_rd_out,
-        .instruction_out,
-        .oprnd_out,
-        .alu_out,
-        .databuf2_out,
-        .rammod_out,
-        .io_address_out,
-        .fetch_en_out,
-        .alu_mode,
-        .nop_out,
-        .hlt_out,
-        .out_odev0,
-        .out_odev1
+        .rst_btn_b      (reset),
+        .clk            (clock),
+        .dev0_i,
+        .test_phase     (),
+        .test_pc        (),
+        .test_bl_done,
+        .test_databus   (),
+        .test_ctrl_sig  (),
+        .test_a_reg_rd  (),
+        .test_inst      (),
+        .test_oprnd_rd  (),
+        .test_alu_o     (),
+        .test_oprnd_buf (),
+        .test_io_address(),
+        .test_fetch_en  (),
+        .test_alumode   (),
+        .test_hlt       (is_hlt),
+        .test_dev0_data_o(),
+        .test_dev1_data_o()
     );
 
     initial
@@ -59,7 +40,7 @@ module testbench;
         clock = 1; #1
         clock = 0; #1
         reset = 1;
-        while (bootloader_done_out == 1'b0 || hlt_out == 1'b0)
+        while (test_bl_done == 1'b0 || is_hlt == 1'b0)
         begin
             clock = 1;
             #1;
