@@ -2,7 +2,7 @@
 import sys
 
 key = [5, 1, 1, 1, 4]
-val = [1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1]
+val = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
 uc = []
 for line in sys.stdin:
@@ -17,20 +17,31 @@ for line in uc:
     value = 0
     for i, l in enumerate(val):
         v = 0 if line[i + klen] == 'x' else int(line[i + klen], 16)
-        value = (value << l) | v
-    keylist = [0]
+        vv = 0
+        for m in range(l):
+            vv = (vv << m) | ((v >> m) & 1)
+        value = (value << l) | vv
+    mask = [0] * sum(key)
+    acc = 0
     for i, l in enumerate(key):
         if line[i] == 'x':
-            o = len(keylist)
-            keylist = keylist * (2 ** l)
-            for j in range(2 ** l):
-                for m in range(o):
-                    keylist[j * o + m] = (keylist[j * o + m] << l) | j
+            for o in range(l):
+                mask[o + acc] = -1
         else:
-            v = int(line[i], 16)
-            keylist = [((k << l) | v) for k in keylist]
-    for s in keylist:
-        uc_dict[s] = value
+            n = int(line[i], 16)
+            for o in range(l):
+                mask[o + acc] = (n >> o) & 1
+        acc += l
+    for i in range(2 ** sum(key)):
+        match = True
+        for m in range(sum(key)):
+            if mask[m] == -1:
+                continue
+            if mask[m] != ((i >> m) & 1):
+                match = False
+                break
+        if match:
+            uc_dict[i] = value
 
 uc_dict += [0] * (8192 - len(uc_dict))
 with open("ucode.01", "w+") as f:

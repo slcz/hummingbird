@@ -161,7 +161,10 @@ module hummingbird(
         loadf_b,
         alu_cin_b,
         m,
-        s,
+        s[0],
+        s[1],
+        s[2],
+        s[3],
         address_f_databus_b,
         csram_b,
         weram_b,
@@ -187,7 +190,7 @@ module hummingbird(
     // ucode: input instruction + flags + bootloader done + phase
     //        output 16b control signals
     ucode ucode_eeprom(
-        .i ({uc_inst_i, c_b, z, bl_done, phase}),
+        .i ({phase, bl_done, z, c_b, uc_inst_i}),
         .o (control_signals)
     );
 

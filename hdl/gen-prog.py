@@ -6,7 +6,10 @@ for i in range(2):
     with open(namei, "r") as f:
         for line in f:
             line = int(line.rstrip(), 16)
-            a.append(line)
+            n = 0
+            for i in range(8):
+                n = n | (((line >> i) & 1) << (7 - i))
+            a.append(n)
     a = a[:4096]
     with open(name, "w+") as f:
         print("const byte inc_data[] PROGMEM = {", file=f)
