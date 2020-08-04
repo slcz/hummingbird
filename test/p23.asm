@@ -1,7 +1,7 @@
 #include "hi.asm"
 
-li(0xc3)
+li(0x82)
 rol
-nop
 rol
+1: jmp 1b
 hlt

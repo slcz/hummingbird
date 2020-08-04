@@ -1,7 +1,8 @@
 #include "hi.asm"
 
-li(0xc3)
+li(0xcb)
 nop
 shl4
+1: jmp 1b
 nop
 hlt
