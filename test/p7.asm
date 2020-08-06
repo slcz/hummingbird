@@ -5,7 +5,6 @@ addi L(0x5a)
 st 2f
 lh 1
 ld 2f
-nop
 hlt
 2:
 .=.+1

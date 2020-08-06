@@ -14,7 +14,6 @@ jc 1f
 hlt
 1:
 li(0x6)
-nop
 hlt
 dead:
 hlt

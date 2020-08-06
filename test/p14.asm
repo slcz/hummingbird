@@ -3,10 +3,10 @@
 li(0x5a)
 cmp data_5a eq
 jc 1f
-2: jmp 2b
+hlt
 1:
 li(0x04)
-nop
+4: jmp 4b
 hlt
 data_5a:
 0x5a

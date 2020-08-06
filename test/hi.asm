@@ -6,3 +6,8 @@
 #define not nori ~0
 #define ori(x) nori x nori ~0
 #define or(x)  nor x nori ~0
+#define clrz setz ne
+#define save clrz call
+#define ret  clrz ne call
+#define hlt  9: jmp 9b
+#define saveframe(rtn) setz ne call JMPWORD(rtn) call rtn

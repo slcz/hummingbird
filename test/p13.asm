@@ -13,7 +13,7 @@ li(0x5a)
 cmp data_5a gt
 jc 1f
 li(0x3)
-nop
+4: jmp 4b
 hlt
 1: hlt
 data_5a:

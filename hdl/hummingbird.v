@@ -20,7 +20,6 @@ module hummingbird(
     output          test_fetch_en,
     output    [5:0] test_alumode,
     output          test_nop,
-    output          test_hlt,
     output    [7:0] test_dev0_data_o,
     output    [7:0] test_dev1_data_o
 );
@@ -81,7 +80,7 @@ module hummingbird(
     assign test_pc = pc;
     counter12b pc_gen(
         .rst    (rst_b),
-        .D      ({instruction[3:0], databus}),
+        .D      ({oprnd8b[3:0], databus}),
         .load   (loadpc_b),
         .clk    (clk),
         .incpc  (incpc),
@@ -136,7 +135,7 @@ module hummingbird(
     // Address mux: select the address from data bus or program counter
     addrmux addrmux(
         .abarb (address_f_databus_b),
-        .a     ({instruction[3:0], address_word_lo8}),
+        .a     ({oprnd8b[3:0], address_word_lo8}),
         .b     (pc),
         .y     (io_address)
     );
@@ -152,7 +151,6 @@ module hummingbird(
     assign test_fetch_en = |phase;
 
     // ucode
-    assign test_hlt = bl_done && (uc_inst_i == 5'b11011);
     wire [15:0] control_signals;
     assign {
         incpc,

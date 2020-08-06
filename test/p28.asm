@@ -17,5 +17,4 @@ ld io0
 ld io1
 ld io2
 ld io3
-1: jmp 1b
 hlt

@@ -43,15 +43,11 @@ class TOKEN(Enum):
     EQ_INST     = 53
     NE_INST     = 54
     NC_INST     = 55
-    SIGN_INST   = 56
-    NEG_INST    = 57
-    SHL_INST    = 58
-    SHR_INST    = 59
-    SHL4_INST   = 60
-    ROL_INST    = 62
-    ROR_INST    = 63
-    SWAP_INST   = 64
-    ASR_INST    = 65
+    SHL_INST    = 56
+    SHR_INST    = 57
+    ROL_INST    = 58
+    ROR_INST    = 59
+    ASR_INST    = 64
 
     LD_INST     = 66
     ST_INST     = 67
@@ -68,45 +64,48 @@ class TOKEN(Enum):
     AND_INST    = 78
     XOR_INST    = 79
     LIH_INST    = 80
-    NOP_INST    = 81
-    HLT_INST    = 82
+    CALL_INST   = 81
+    SETZ_INST   = 83
+    PUSH_INST   = 84
+    POP_INST    = 85
+    PEEK_INST   = 86
+    XCHG_INST   = 87
 
     END         = 100
 
 inst = {
-    TOKEN.GT_INST:    [1, 8, 0xf0],
-    TOKEN.NOP_INST:   [1, 8, 0xf1],
-    TOKEN.LT_INST:    [1, 8, 0xf2],
-    TOKEN.EQ_INST:    [1, 8, 0xf3],
-    TOKEN.NE_INST:    [1, 8, 0xf4],
-    TOKEN.NC_INST:    [1, 8, 0xf5],
-    TOKEN.SIGN_INST:  [1, 8, 0xf6],
-    TOKEN.NEG_INST:   [1, 8, 0xf7],
+    TOKEN.CALL_INST:      [1, 8, 0xf0],
+    TOKEN.XCHG_INST:      [1, 8, 0xf1],
+    TOKEN.GT_INST:        [1, 8, 0xf2],
+    TOKEN.LT_INST:        [1, 8, 0xf3],
+    TOKEN.EQ_INST:        [1, 8, 0xf4],
+    TOKEN.NE_INST:        [1, 8, 0xf5],
+    TOKEN.NC_INST:        [1, 8, 0xf6],
+    TOKEN.PUSH_INST:      [1, 8, 0xf7],
+    TOKEN.POP_INST:       [1, 8, 0xf8],
+    TOKEN.PEEK_INST:      [1, 8, 0xf9],
+    TOKEN.SETZ_INST:      [1, 8, 0xfa],
+    TOKEN.SHL_INST:       [1, 8, 0xfb],
+    TOKEN.SHR_INST:       [1, 8, 0xfc],
+    TOKEN.ROL_INST:       [1, 8, 0xfd],
+    TOKEN.ROR_INST:       [1, 8, 0xfe],
+    TOKEN.ASR_INST:       [1, 8, 0xff],
 
-    TOKEN.SHL_INST:   [1, 8, 0xf8],
-    TOKEN.SHR_INST:   [1, 8, 0xf9],
-    TOKEN.SHL4_INST:  [1, 8, 0xfa],
-    TOKEN.HLT_INST:   [1, 8, 0xfb],
-    TOKEN.ROL_INST:   [1, 8, 0xfc],
-    TOKEN.ROR_INST:   [1, 8, 0xfd],
-    TOKEN.SWAP_INST:  [1, 8, 0xfe],
-    TOKEN.ASR_INST:   [1, 8, 0xff],
-
-    TOKEN.LD_INST:    [2, 4, 0x0],
-    TOKEN.ST_INST:    [2, 4, 0x1],
-    TOKEN.ADD_INST:   [2, 4, 0x2],
-    TOKEN.ADDI_INST:  [1, 4, 0x3],
-    TOKEN.ADDIC_INST: [1, 4, 0x4],
-    TOKEN.SUB_INST:   [2, 4, 0x5],
-    TOKEN.JMP_INST:   [2, 4, 0x6],
-    TOKEN.JC_INST:    [2, 4, 0x7],
-    TOKEN.CMP_INST:   [2, 4, 0x8],
-    TOKEN.CMPI_INST:  [1, 4, 0x9],
-    TOKEN.NOR_INST:   [2, 4, 0xa],
-    TOKEN.NORI_INST:  [1, 4, 0xb],
-    TOKEN.AND_INST:   [2, 4, 0xc],
-    TOKEN.XOR_INST:   [2, 4, 0xd],
-    TOKEN.LIH_INST:   [1, 4, 0xe]
+    TOKEN.LD_INST:        [2, 4, 0x0],
+    TOKEN.ST_INST:        [2, 4, 0x1],
+    TOKEN.ADD_INST:       [2, 4, 0x2],
+    TOKEN.ADDI_INST:      [1, 4, 0x3],
+    TOKEN.ADDIC_INST:     [1, 4, 0x4],
+    TOKEN.SUB_INST:       [2, 4, 0x5],
+    TOKEN.JMP_INST:       [2, 4, 0x6],
+    TOKEN.JC_INST:        [2, 4, 0x7],
+    TOKEN.CMP_INST:       [2, 4, 0x8],
+    TOKEN.CMPI_INST:      [1, 4, 0x9],
+    TOKEN.NOR_INST:       [2, 4, 0xa],
+    TOKEN.NORI_INST:      [1, 4, 0xb],
+    TOKEN.AND_INST:       [2, 4, 0xc],
+    TOKEN.XOR_INST:       [2, 4, 0xd],
+    TOKEN.LIH_INST:       [1, 4, 0xe]
 }
 
 keyword = {
@@ -117,18 +116,21 @@ keyword = {
     "eq":   TOKEN.EQ_INST,
     "ne":   TOKEN.NE_INST,
     "nc":   TOKEN.NC_INST,
-    "nop":  TOKEN.NOP_INST,
+    "nop":  TOKEN.SETZ_INST,
+    "hlt":  TOKEN.SETZ_INST,
+    "setz": TOKEN.SETZ_INST,
+    "stz":  TOKEN.SETZ_INST,
 
-    "sign": TOKEN.SIGN_INST,
-    "neg":  TOKEN.NEG_INST,
     "shl":  TOKEN.SHL_INST,
     "shr":  TOKEN.SHR_INST,
-    "shl4": TOKEN.SHL4_INST,
     "rol":  TOKEN.ROL_INST,
     "ror":  TOKEN.ROR_INST,
-    "swap": TOKEN.SWAP_INST,
     "asr":  TOKEN.ASR_INST,
-    "hlt":  TOKEN.HLT_INST,
+    "call": TOKEN.CALL_INST,
+    "push": TOKEN.PUSH_INST,
+    "pop":  TOKEN.POP_INST,
+    "peek": TOKEN.PEEK_INST,
+    "xchg": TOKEN.XCHG_INST,
 
     "ld":   TOKEN.LD_INST,
     "st":   TOKEN.ST_INST,

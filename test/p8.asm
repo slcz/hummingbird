@@ -3,7 +3,7 @@
 lh H(0xa5)
 addi L(0xa5)
 add 2f
-nop
+1: jmp 1b
 hlt
 2:
 0x5a

@@ -163,8 +163,8 @@ lh 0 st s
 ld loc sub forty st loc
 1:
 ld loc
-st save
-save = . + 1
+st save_context
+save_context = . + 1
 ld text
 st t
 

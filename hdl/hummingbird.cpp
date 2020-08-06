@@ -36,7 +36,8 @@ int main(int argc, char **argv)
     int bootloader_done = false;
 
     int cycles = 1;
-    while (hlt == false) {
+    int oldpc = -1;
+    while (1) {
         int phase, pc, control_signals, a_reg, instruction;
         int oprnd, alu, ramaddress, rammod;
         int ram_word, alumode;
@@ -49,7 +50,6 @@ int main(int argc, char **argv)
         top->clk = 0;
         top->eval();
 
-        hlt = top->test_hlt;
         bootloader_done = top->test_bl_done;
         if (bootloader_done) {
             phase = top->test_phase;
@@ -65,6 +65,12 @@ int main(int argc, char **argv)
             alumode = top->test_alumode;
             out0 = top->test_dev0_data_o;
             out1 = top->test_dev1_data_o;
+            if (phase == 0) {
+                if (oldpc == pc) {
+                    break;
+                }
+                oldpc = pc;
+            }
             std::cout <<
                 std::hex <<
                 " cycles  " << std::setw(4) << cycles <<
@@ -80,7 +86,6 @@ int main(int argc, char **argv)
                 " alumode " << std::setw(2) << alumode <<
                 " output0 " << std::setw(4) << out0 <<
                 " output1 " << std::setw(4) << out1 <<
-                " hlt     " << hlt <<
                 std::endl;
         }
 

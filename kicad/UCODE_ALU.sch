@@ -707,11 +707,6 @@ Wire Wire Line
 Wire Wire Line
 	9850 5050 9600 5050
 Wire Wire Line
-	9600 3850 9600 3550
-Wire Wire Line
-	9600 3550 9100 3550
-Connection ~ 9100 3550
-Wire Wire Line
 	4000 2650 3300 2650
 Text GLabel 3300 2150 2    50   Input ~ 0
 clk
@@ -986,8 +981,19 @@ Wire Wire Line
 	10600 2800 9550 2800
 Wire Wire Line
 	10600 1700 10600 2800
-Wire Bus Line
-	1300 2000 1300 6850
 Text HLabel 9550 1900 2    50   Input ~ 0
 INST_7
+$Comp
+L power:GND #PWR0103
+U 1 1 5F248E31
+P 9600 3850
+F 0 "#PWR0103" H 9600 3600 50  0001 C CNN
+F 1 "GND" V 9605 3722 50  0000 R CNN
+F 2 "" H 9600 3850 50  0001 C CNN
+F 3 "" H 9600 3850 50  0001 C CNN
+	1    9600 3850
+	0    -1   -1   0   
+$EndComp
+Wire Bus Line
+	1300 2000 1300 6850
 $EndSCHEMATC

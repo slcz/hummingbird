@@ -1,0 +1,13 @@
+#include "hi.asm"
+li(1)
+st 0
+jmp 1f
+
+.=0x100
+1:
+li(0xc5)
+st 0x10
+li(0x5c)
+xchg 0
+ld(0x10)
+hlt

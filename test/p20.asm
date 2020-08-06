@@ -5,5 +5,4 @@ shl
 shl
 shl
 shl
-nop
 hlt
