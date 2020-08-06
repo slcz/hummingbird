@@ -10,4 +10,5 @@
 #define save clrz call
 #define ret  clrz ne call
 #define hlt  9: jmp 9b
-#define saveframe(rtn) setz ne call JMPWORD(rtn) call rtn
+#define saveframe(rtn) save JMPWORD(rtn) save rtn
+#define prolog .=0 start: li(0x11) st start jmp 0x100 .=0x100

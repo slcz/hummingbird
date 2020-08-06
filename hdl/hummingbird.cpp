@@ -84,6 +84,9 @@ int main(int argc, char **argv)
                 " alu     " << std::setw(2) << alu <<
                 " ramaddr " << std::setw(5) << ramaddress <<
                 " alumode " << std::setw(2) << alumode <<
+                " memwr   " << std::setw(2) <<
+                ((control_signals >> 3) & 0x1) <<
+                ((control_signals >> 4) & 0x1) <<
                 " output0 " << std::setw(4) << out0 <<
                 " output1 " << std::setw(4) << out1 <<
                 std::endl;
