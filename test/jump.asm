@@ -35,22 +35,39 @@ li(1f) st send_ctrl_r
 li(0x38)
 jmp send_ctrl
 1:
+ror ror ror ror
 
 li(1f) st send_ctrl_r
 li(0x0c) jmp send_ctrl
 1:
+ror ror ror ror
 
 li(1f) st send_ctrl_r
 li(0x01) jmp send_ctrl
 1:
 
+li(0x0f)
+st count1
+wait2:
+li(0xff)
+st count
+wait3: ror
+ld count
+addi (-1) st count ne
+jc wait3
+ld count1
+addi (-1) st count1 ne
+jc wait2
+
 li(1f) st send_ctrl_r
 li(0x06) jmp send_ctrl
 1:
+ror ror ror ror
 
 li(1f) st send_ctrl_r
 li(0x40) jmp send_ctrl
 1:
+ror ror ror ror
 
 2:
 li(1f) st send_data_r
@@ -59,6 +76,7 @@ ld frog cmpi (-1) eq
 jc 4f
 jmp send_data
 1:
+ror ror ror ror
 ld p_text_1 addi 1 st p_text_1
 jmp 2b
 
@@ -66,6 +84,7 @@ jmp 2b
 li(1f) st send_ctrl_r
 li(0x80) jmp send_ctrl
 1:
+ror ror ror ror
 
 2:
 li(1f) st send_data_r
@@ -74,6 +93,7 @@ ld text cmpi (-1) eq
 jc draw_frog
 jmp send_data
 1:
+ror ror ror ror
 ld p_text_2 addi 1 st p_text_2
 jmp 2b
 
@@ -110,6 +130,7 @@ add twenty_four
 2:
 add eighty jmp send_ctrl
 1:
+ror ror ror ror
 
 li(1f) st send_data_r
 ld tmp jmp send_data
@@ -117,12 +138,17 @@ ld tmp jmp send_data
 
 loop:
 li(0xff)
+st count1
+wait1:
+li(0xff)
 st count
-wait:
-ror ror ror ror ror ror ror ror
+wait: ror
 ld count
 addi (-1) st count ne
 jc wait
+ld count1
+addi (-1) st count1 ne
+jc wait1
 
 // preserve previous location
 ld loc
@@ -130,13 +156,30 @@ st prev
 
 lh 0x0 st up st down
 // polling
+li(0x10)
+st ioctrl
+li(0xf)
+st count
+1:
+ror
+ld count
+addi (-1)
+st count
+eq jc 1f
+jmp 1b
+1:
+
 ld ioin
+st btn
+lh 0x00
+st ioctrl
+ld btn
 nori 0xfe eq
 jc 1f
 li(0x1) st down
 jmp polling_done
 1:
-ld ioin
+ld btn
 nori 0xfd eq
 jc polling_done
 li(0x1) st up
@@ -202,7 +245,10 @@ li(0x02) st tmp jmp save_loc
 
 save_loc:
 
-li(0x61) st send_ctrl_r0 st send_data_r0
+li(0x63) st send_ctrl_r0 st send_data_r0
+jmp 1f
+
+.=768
 1:
 li(1f) st send_ctrl_r
 ld prev
@@ -213,6 +259,8 @@ add twenty_four
 add eighty jmp send_ctrl
 1:
 
+ror ror ror ror
+
 li(1f) st send_data_r
 ld prev
 st loc_data_get
@@ -220,6 +268,8 @@ loc_data_get = . + 1
 ld text
 jmp send_data
 1:
+
+ror ror ror ror
 
 li(1f) st send_ctrl_r
 ld loc
@@ -230,16 +280,21 @@ add twenty_four
 add eighty jmp send_ctrl
 1:
 
+ror ror ror ror
+
 li(1f) st send_data_r
 ld tmp jmp send_data
 1:
 
+ror ror ror ror
+
 li(1f) st send_ctrl_r
 li(0x18) jmp send_ctrl
-1: jmp loop
+1: ror ror ror ror jmp loop
 hlt
 
 count: 0xff
+count1: 0xff
 
 loc: 46
 prev: 0
@@ -257,7 +312,7 @@ result: 0
 eighty_dec: 80
 onetwenty: 120
 
-.=512
+.=1024
 frog:
 0x04 0x0e 0x04 0x0a 0x00 0x00 0x00 0x00
 0x00 0x00 0x00 0x00 0x04 0x0e 0x04 0x0a
@@ -268,7 +323,7 @@ frog:
 0x00 0x00 0x1f 0x00 0x00 0x00 0x1f 0x00
 (-1)
 
-.=768
+.=1280
 text:
  0x04  0x04  0x06  0x20  0x20  0x06  0x04  0x06  0x20  0x20  0x05  0x06  0x04  0x04  0x06  0x04
  0x04  0x20  0x20  0x04  0x04  0x06  0x20  0x04  0x04  0x06  0x05  0x04  0x04  0x04  0x20  0x20
@@ -278,13 +333,20 @@ text:
 (-1)
 
 finish:
-li(0x63) st send_ctrl_r0 st send_data_r0
+li(0x65) st send_ctrl_r0 st send_data_r0
 li(1f) st send_ctrl_r
 li(0x02) jmp send_ctrl
 1:
+li(0xff)
+st count
+7: ror
+ld count
+addi (-1) st count ne
+jc 7b
 li(1f) st send_ctrl_r
 li(0x80) jmp send_ctrl
 1:
+ror ror ror ror
 
 ld result eq jc jloss
 li(1f) st send_data_r
@@ -294,6 +356,7 @@ ld win cmpi (-1) eq
 jc die
 jmp send_data
 1:
+ror ror ror ror
 ld p_text_3 addi 1 st p_text_3
 jmp 2b
 
@@ -305,11 +368,11 @@ ld loss cmpi (-1) eq
 jc die
 jmp send_data
 1:
+ror ror ror ror
 ld p_text_4 addi 1 st p_text_4
 jmp 2b
 
 die: jmp die
-
-.=1024
 win: $W $I $N $! $  $  $  (-1)
 loss: $L $O $S $S $  $  $  (-1)
+btn: 3
