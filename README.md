@@ -11,6 +11,9 @@ There are some major extensions. The similarities with the original projects are
 1. Instruction set supports immediate number or memory content as an operand. There is only one register (accumulator).
 2. The ALU is largely the same as nibbler, though it is expanded to 8 bit by using 2 cascading 74181 ALU chips.
 3. Addressable space is 4096.
+4. Ucode design is similar and outputs total 16 control signals.
+5. Frogger game from original project is ported (rewritten), and also runs on 16x2 LCD screen. This is likely the only applications for LCD screen and much
+   of the new software will be written using terminal interface.
 The key differences are,
 1. While the size of the addressable space is still 4096, the width of the databus is extended to 8 bit.
 2. Switching to Von Neumann architecture. There are a 4Kx8 program store and a 4Kx8 RAM.
@@ -30,7 +33,7 @@ The key differences are,
 
 Below is a block diagram of hummingbird CPU: ![Architecture](/doc/Hummingbird.png)
 
-Hummingbird instructions is 8 to 16 bit in length and their execution is
+Hummingbird instructions is 8 to 24 bit in length and their execution is
 controlled by the phase signal. The phase signal counts from 0 to 15, and
 phase 0 is always fetch phase. Thus an
 instruction may takes from 1 to 16 cycles to complete. The last cycle of
@@ -44,41 +47,50 @@ in which casr the
 lower nibble is shifted left 4 bits and zeros are appended to the low order
 bits to form a 8 bit immediate operand.
 
-There are total of 31 instructions:
+There are total of 30 instructions:
 
 | NAME | OP   | FLAGS | Description                                        |
+|      |      |       | aaa: 12 bit memory address                         |
+|      |      |       | zz: 8 bit memory address starting from 0 (page 0)  |
+|      |      |       | II: 8 bit immediate                                |
+|      |      |       | i: 4 bit immediate, to be sign extended to 8 bit operand | 
 |------|------|-------|----------------------------------------------------|
-| LD   | 0aaa |  -/-  | AREG  <= [aaa] (Load from memory)                  |
-| ST   | 1aaa |  -/-  | [aaa] <= AREG  (Store to memory)                   |
-| ADD  | 2aaa |  c/z  | AREG  <= AREG + [aaa]                              |
-| ADDI | 3i   |  c/z  | AREG  <= AREG + signext(i)                         |
-| ADDIC| 4i   |  c/z  | AREG  <= AREG + signext(i) + cflag                 |
-| SUB  | 5aaa |  c/z  | AREG  <= AREG - [aaa]                              |
-| JMP  | 6aaa |  -/-  | PC    <= [aaa]                                     |
-| JC   | 7aaa |  -/-  | PC    <= [aaa] if cflag else PC + 1                |
+| LD   | 0aaa |  -/z  | AREG  <= [aaa] Load from memory                    |
+| ST   | 1aaa |  -/-  | [aaa] <= AREG  Store to memory                     |
+| ADD  | 2aaa |  c/z  | AREG  <= AREG + [aaa] add with memory              |
+| ADDI | 3i   |  c/z  | AREG  <= AREG + signext(i) add with immediate      |
+| ADDIC| 4i   |  c/z  | AREG  <= AREG + signext(i) + carry                 |
+| SUB  | 5aaa |  c/z  | AREG  <= AREG - [aaa] Subtract from memory         |
+| JMP  | 6aaa |  -/-  | PC    <= [aaa] jump                                |
+| JC   | 7aaa |  -/-  | PC    <= [aaa] jump if cflag else PC + 1           |
 | CMP  | 8aaa |  c/z  | AREG + (-[aaa]), Compare with memory               |
 | CMPI | 9i   |  c/z  | AREG + (-signext(i)), Compare with immediate       |
-| NOR  | Aaaa |  c/z  | AREG  <= ~(AREG | [aaa])                           |
-| NORI | Bi   |  c/z  | AREG  <= ~(AREG | signext(i))                      |
+| NOR  | Aaaa |  c/z  | AREG  <= ~(AREG | [aaa]) nor with memory           |
+| NORI | Bi   |  c/z  | AREG  <= ~(AREG | signext(i)) nor with immediate   |
 | AND  | Caaa |  c/z  | AREG  <= AREG & [aaa]                              |
 | XOR  | Daaa |  c/z  | AREG  <= AREG ^ [aaa]                              |
 | LIH  | Ei   |  -/-  | AREG  <= i << 4 | 0 Load to high nibble            |
-| GT   | F0   |  c/z  | cflag = !cflag and !zflag                          |
-| NOP  | F1   |  n/a  | no operation                                       |
-| LT   | F2   |  n/a  | cflag = cflag and !zflag                           |
-| EQ   | F3   |  n/a  | cflag = zflag                                      |
-| NE   | F4   |  n/a  | cflag = !zflag                                     |
-| NC   | F5   |  n/a  | cflag = !cflag                                     |
-| SIGN | F6   |  x/x  | cflag = A[7], test sign bit, does not change A.    |
-| NEG  | F7   |  x/x  | A=-A                                               |
-| SHL  | F8   |  x/x  | A=A<<1                                             |
-| SHR  | F9   |  x/x  | A=A>>1, zero fill bit 7                            |
-| SHL4 | FA   |  x/x  | A=A<<4                                             |
-| HLT  | FB   |  x/x  | no operation                                       |
-| ROL  | FC   |  x/x  | A=A<<1 | A[7]                                      |
-| ROR  | FD   |  x/x  | A=A>>1 | (A[0]<<8)                                 |
-| SWAP | FE   |  x/x  | swap nibbles ab => ba                              |
-| ASR  | FF   |  x/x  | arithmatic shift right by 1 bit                    |
+| SAVE | F0 II (z=0) |  -/-  | [[0]] <= II [0] <= [0] + 1 Push immediate II on stack |
+| RETURN | F0 (z=1) |  -/-  | [0] <= [0] - 2, PC <= [[0]], Pop 2 bytes from stack and jump to stack, |
+|      |      |       | where the jump back to caller instruction is built. |
+|      |      |       | Here, both F0 opcode is used for save and return, if |
+|      |      |       | z flag is set, the opcode is treated as return, otherwise, |
+|      |      |       | it is taken as save instruction.                   |
+| RESERVED | F1 |     |                                                    |
+| GT   | F2   |  c/z  | cflag = !cflag and !zflag                          |
+| LT   | F3   |  n/a  | cflag = cflag and !zflag                           |
+| EQ   | F4   |  n/a  | cflag = zflag                                      |
+| NE   | F5   |  n/a  | cflag = !zflag                                     |
+| NC   | F6   |  n/a  | cflag = !cflag                                     |
+| PUSH | F7 zz|  -/-  | [[zz]] <= AREG, [zz] = [zz] + 1, push on stack     |
+| POP  | F8 zz|  -/-  | [zz] = [zz] - 1, AREG <= [[zz]], pop from stack    |
+| PEEK | F9 zz II|  -/z  | A <= [[zz] - II], peek stack                    |
+| SETZ | FA   |  -/z  | z <= 1                                             |
+| SHL  | FB   |  -/z  | AREG <= AREG<<1, shift left                        |
+| SHR  | FC   |  -/z  | AREG <= AREG>>1, zero fill bit 7, shift right      |
+| ROL  | FD   |  -/z  | A=A<<1 | A[7]                                      |
+| ROR  | FE   |  -/z  | A=A>>1 | (A[0]<<8)                                 |
+| ASR  | FF   |  -/z  | arithmatic shift right by 1 bit                    |
 
 ALU is expanded to 8 bit wide and has 2 input ports. Port A is always
 connected to the accumulator (A REG) and port B comes from the data bus.
