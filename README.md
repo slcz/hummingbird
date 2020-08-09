@@ -46,7 +46,6 @@ bits to form a 8 bit immediate operand.
 
 There are total of 31 instructions:
 
-|------|------|-------|----------------------------------------------------|
 | NAME | OP   | FLAGS | Description                                        |
 |------|------|-------|----------------------------------------------------|
 | LD   | 0aaa |  -/-  | AREG  <= [aaa] (Load from memory)                  |
