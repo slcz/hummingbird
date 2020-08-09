@@ -12,36 +12,7 @@ Hummingbird is a 8 bit 74xx IC based CPU. It is inspired by [Nibbler 4 bit CPU](
    to run a single instruction. Supports variable instruction cycles.
 5. Supports logic instructions and bit shift/rotate instructions.
 
-Block diagram of hummingbird CPU:
-
-````                                   
-
-
-         +-----------+-----------------------------------------+
-         |           |             | |                         |
-         o-------------------------+ |                         |
-         |           |   +-------+ | |                         |
-    +----v-----+     |   |ADDRESS| | |                         |
-    | PC[11:0] |     |   |       | | |          +-----+        |
-    +----+-----+     |   |  REG  <-+ |          |     |        |
-         |           |   +---+---+ |D|      +---v---+ |        |
-         |           +-------o     |a<------+ A REG | |        |
----------v-------------------v---  |t|      +---+---+ |        |
-     Address bus 12b               |a|          | OP/A|        |
----------+----------------+------  | | OP/B +---v---+ | +----+ |
-         |                |        |b+------> ALU   +-+->FLAG| |fetch[3:0]
-         |                |        |u|      +-------+   +-+--+ |
-    +----v------+  +------v-----+  |s|          +---------+----o
-    | Program   |  |     RAM    |  | | sign +---+---+     +--+ |
-    | Store 4x8 |  |    4Kx8b   |  |8<------+ FETCH <--phase | |fetch[7:4]
-    +----+------+  +------^-----+  |b|  ext +-------+   | +--v-v----+
-         |                |        | |          ^       +->  UCODE  +->control
-         |                |        | |          |         +---------+  signals
----------v----------------v--------+ +----------+------------------------------
-                                 Data bus 8b
--------------------------------------------------------------------------------
-
-````
+Block diagram of hummingbird CPU: ![Architecture](/doc/Hummingbird.png)
 
 Hummingbird instruction set is 8 to 16 bit wide and their execution is
 controlled by the phase signal. The phase signal counts from 0 to 15, and
