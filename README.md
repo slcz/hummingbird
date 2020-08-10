@@ -96,4 +96,4 @@ ALU is expanded to 8 bit wide and has 2 input ports. Port A is always
 connected to the accumulator (A REG) and port B comes from the data bus.
 Two cascading 74181 4bit ALU ICs form the ALU.
 
-The [build photo](doc/hummingbird-breadboard.jpg)
+The build photo on breadboard is shown ![here](doc/hummingbird-breadboard.jpg)
