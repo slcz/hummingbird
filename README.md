@@ -1,69 +1,96 @@
-# Hummingbird 8-bit CPU instruction set
+# Hummingbird 8-bit CPU build with 74xx ICs
 
-Hummingbird is a 8 bit 74xx IC based CPU. It is inspired by [Nibbler 4 bit CPU](https://www.bigmessowires.com/nibbler/).  The key differences are,
-1. Databus is extended to 8 bit and instruction bus is 12 bit.
-2. Von Neumann architecture. There are a 4Kx8 program store and a 4Kx8 RAM.
-   Code and data are all stored in RAM. After power-on reset, the entire
-   program store is copied to RAM and control transfers to RAM afterwards.
-3. Expands number of instructions from 16 to 31. When high nibble of an
-   instruction is 4'b1111, the low order nibble is decoded as extended
-   instructions.
+Hummingbird is a 8 bit 74xx IC based CPU. It is initiated as a clone of
+[Nibbler](https://www.bigmessowires.com/nibbler/) on breadboard.
+However, the course diverted in the middle due to the difficulty of programming
+with separate instruction and data space, see [Havard Architecture](http://www.differencebetween.net/technology/difference-between-von-neumann-and-harvard-architecture/). Also, it is somewhat cumbersome to program on 4 bit CPU.I made a number of significant changes over the original
+design and also made it a 8 bit CPU, as a result, the new architecture is named Hummingbird since it is no longer a nibbler.
+
+While some of original project's components are reused and certain components are still derived from Nibbler project.
+There are some major extensions. The similarities with the original projects are,
+1. Instruction set supports immediate number or memory content as an operand. There is only one register (accumulator).
+2. The ALU is largely the same as nibbler, though it is expanded to 8 bit by using 2 cascading 74181 ALU chips.
+3. Addressable space is 4096.
+4. Ucode design is similar and outputs total 16 control signals.
+5. Frogger game from original project is ported (rewritten), and also runs on 16x2 LCD screen. This is likely the only applications for LCD screen and much
+   of the new software will be written using terminal interface.
+The key differences are,
+1. While the size of the addressable space is still 4096, the width of the databus is extended to 8 bit.
+2. Switching to Von Neumann architecture. There are a 4Kx8 program store and a 4Kx8 RAM.
+   Instructions and data share the same space in RAM. After power-on reset, a built-in bootloader copies the entire
+   program store RAM and control transfers to RAM afterwards while the program store is disabled.
+3. Expands number of instructions from 16 to 31. The original Nibbler project decoder uses high nibble
+   as opcode and restricts the maximum number of instructions to 16. Hummingbird expands to low nibbler when the high nibble
+   is 1111.
 4. Phase counter is expanded from 1 bit to 4 bits, allows for up to 15 cycles
    to run a single instruction. Supports variable instruction cycles.
 5. Supports logic instructions and bit shift/rotate instructions.
+6. Supports stack semantics. The first 256 of address space (also called page 0) is used as a stack and it grows from lower address to higher address.
+   The memory byte 0 is interpreted as the stack pointer (so that the stack address starts from 1).
+7. Instructions took 2 to 16 cycles to complete. There is a 4 bit counter that controls the execution phases.
+8. Aside from original projects 16x2 LCD device, the hummingbird also adds a arduino nano based IO processor. It is mainly used for
+   user interaction through terminal.
 
-Block diagram of hummingbird CPU: ![Architecture](/doc/Hummingbird.png)
+Below is a block diagram of hummingbird CPU: ![Architecture](/doc/Hummingbird.png)
 
-Hummingbird instruction set is 8 to 16 bit wide and their execution is
+Hummingbird instructions is 8 to 24 bit in length and their execution is
 controlled by the phase signal. The phase signal counts from 0 to 15, and
 phase 0 is always fetch phase. Thus an
-instruction may takes from 1 to 15 cycles to complete. The last cycle of
-an instruction execuation asserts /phrst to reset phase counter.
+instruction may takes from 1 to 16 cycles to complete. The last cycle of
+an instruction execuation asserts /phrst to reset phase counter so that the next
+instruction can start execute as early as possible.
 
 Some instructions (ADDI, CMPI, NORI) accept immediate operand. The immediate
 operand occupies low nibble of an instruction and is sign extended to 8 bit
-before sending to the ALU's B input. One exception is LH instruction, the
-low nibble is shifted left 4 bits and zeros are appended to the low order
+before sending to the ALU's B input. One exception is the load high (LH) instruction, 
+in which casr the
+lower nibble is shifted left 4 bits and zeros are appended to the low order
 bits to form a 8 bit immediate operand.
 
-There are total of 31 instructions:
+There are total of 30 instructions:
+
 | NAME | OP   | FLAGS | Description                                        |
-|      |      |  c/z  |     (aaa: 12 bit address)                          |
-|      |      |       |     (  i:  4 bit immediate)                        |
-|      |      |       |     (-/-:  does not modify flags)                  |
-|      |      |       |     (?/?:  flag modificationo is indeterministic)  |
 |------|------|-------|----------------------------------------------------|
-| LD   | 0aaa |  -/-  | AREG  <= [aaa] (Load from memory)                  |
-| ST   | 1aaa |  -/-  | [aaa] <= AREG  (Store to memory)                   |
-| ADD  | 2aaa |  c/z  | AREG  <= AREG + [aaa]                              |
-| ADDI | 3i   |  c/z  | AREG  <= AREG + signext(i)                         |
-| ADDIC| 4i   |  c/z  | AREG  <= AREG + signext(i) + cflag                 |
-| SUB  | 5aaa |  c/z  | AREG  <= AREG - [aaa]                              |
-| JMP  | 6aaa |  -/-  | PC    <= [aaa]                                     |
-| JC   | 7aaa |  -/-  | PC    <= [aaa] if cflag else PC + 1                |
+|      |      |       | aaa: 12 bit memory address                         |
+|      |      |       | zz: 8 bit memory address starting from 0 (page 0)  |
+|      |      |       | II: 8 bit immediate                                |
+|      |      |       | i: 4 bit immediate, to be sign extended to 8 bit operand | 
+| LD   | 0aaa |  -/z  | AREG  <= [aaa] Load from memory                    |
+| ST   | 1aaa |  -/-  | [aaa] <= AREG  Store to memory                     |
+| ADD  | 2aaa |  c/z  | AREG  <= AREG + [aaa] add with memory              |
+| ADDI | 3i   |  c/z  | AREG  <= AREG + signext(i) add with immediate      |
+| ADDIC| 4i   |  c/z  | AREG  <= AREG + signext(i) + carry                 |
+| SUB  | 5aaa |  c/z  | AREG  <= AREG - [aaa] Subtract from memory         |
+| JMP  | 6aaa |  -/-  | PC    <= [aaa] jump                                |
+| JC   | 7aaa |  -/-  | PC    <= [aaa] jump if cflag else PC + 1           |
 | CMP  | 8aaa |  c/z  | AREG + (-[aaa]), Compare with memory               |
 | CMPI | 9i   |  c/z  | AREG + (-signext(i)), Compare with immediate       |
-| NOR  | Aaaa |  c/z  | AREG  <= ~(AREG | [aaa])                           |
-| NORI | Bi   |  c/z  | AREG  <= ~(AREG | signext(i))                      |
+| NOR  | Aaaa |  c/z  | AREG  <= ~(AREG | [aaa]) nor with memory           |
+| NORI | Bi   |  c/z  | AREG  <= ~(AREG | signext(i)) nor with immediate   |
 | AND  | Caaa |  c/z  | AREG  <= AREG & [aaa]                              |
 | XOR  | Daaa |  c/z  | AREG  <= AREG ^ [aaa]                              |
 | LIH  | Ei   |  -/-  | AREG  <= i << 4 | 0 Load to high nibble            |
-| GT   | F0   |  c/z  | cflag = !cflag and !zflag                          |
-| NOP  | F1   |  n/a  | no operation                                       |
-| LT   | F2   |  n/a  | cflag = cflag and !zflag                           |
-| EQ   | F3   |  n/a  | cflag = zflag                                      |
-| NE   | F4   |  n/a  | cflag = !zflag                                     |
-| NC   | F5   |  n/a  | cflag = !cflag                                     |
-| SIGN | F6   |  x/x  | cflag = A[7], test sign bit, does not change A.    |
-| NEG  | F7   |  x/x  | A=-A                                               |
-| SHL  | F8   |  x/x  | A=A<<1                                             |
-| SHR  | F9   |  x/x  | A=A>>1, zero fill bit 7                            |
-| SHL4 | FA   |  x/x  | A=A<<4                                             |
-| HLT  | FB   |  x/x  | no operation                                       |
-| ROL  | FC   |  x/x  | A=A<<1 | A[7]                                      |
-| ROR  | FD   |  x/x  | A=A>>1 | (A[0]<<8)                                 |
-| SWAP | FE   |  x/x  | swap nibbles ab => ba                              |
-| ASR  | FF   |  x/x  | arithmatic shift right by 1 bit                    |
+| SAVE | F0 II (z=0) |  -/-  | [[0]] <= II [0] <= [0] + 1 Push immediate II on stack |
+| RETURN | F0 (z=1) |  -/-  | [0] <= [0] - 2, PC <= [[0]], Pop 2 bytes from stack and jump to stack, |
+|      |      |       | where the jump back to caller instruction is built. |
+|      |      |       | Here, both F0 opcode is used for save and return, if |
+|      |      |       | z flag is set, the opcode is treated as return, otherwise, |
+|      |      |       | it is taken as save instruction.                   |
+| RESERVED | F1 |     |                                                    |
+| GT   | F2   |  c/z  | cflag = !cflag and !zflag                          |
+| LT   | F3   |  n/a  | cflag = cflag and !zflag                           |
+| EQ   | F4   |  n/a  | cflag = zflag                                      |
+| NE   | F5   |  n/a  | cflag = !zflag                                     |
+| NC   | F6   |  n/a  | cflag = !cflag                                     |
+| PUSH | F7 zz|  -/-  | [[zz]] <= AREG, [zz] = [zz] + 1, push on stack     |
+| POP  | F8 zz|  -/-  | [zz] = [zz] - 1, AREG <= [[zz]], pop from stack    |
+| PEEK | F9 zz II|  -/z  | A <= [[zz] - II], peek stack                    |
+| SETZ | FA   |  -/z  | z <= 1                                             |
+| SHL  | FB   |  -/z  | AREG <= AREG<<1, shift left                        |
+| SHR  | FC   |  -/z  | AREG <= AREG>>1, zero fill bit 7, shift right      |
+| ROL  | FD   |  -/z  | A=A<<1 | A[7]                                      |
+| ROR  | FE   |  -/z  | A=A>>1 | (A[0]<<8)                                 |
+| ASR  | FF   |  -/z  | arithmatic shift right by 1 bit                    |
 
 ALU is expanded to 8 bit wide and has 2 input ports. Port A is always
 connected to the accumulator (A REG) and port B comes from the data bus.
