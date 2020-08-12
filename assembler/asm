@@ -225,14 +225,17 @@ class Env:
             l -= 1
         return 0
 
-def write_to_list(lst, fn, ln, update_list, update_file):
+lastfile = None
+def write_to_list(lst, fn, ln, update_list):
     global gen
+    global lastfile
     if not update_list:
         return
     if fn == "" or (fn[0] == "<" and fn[-1] == ">"):
         return
-    if update_file:
-        print("{}:".format(fn))
+    if not lastfile or lastfile != fn:
+        print("{}:".format(fn), file=lst)
+    lastfile = fn
     with open(fn, "r") as f:
         lines = f.readlines()
         if len(lines) <= ln - 1:
@@ -251,15 +254,13 @@ def read_input(data, lst):
     fn = ""
     i = 0
     update_source_lst = False
-    update_file = True
     while i < len(data):
         c = data[i]
         if c.isspace():
             i += 1
             if c == "\n":
-                write_to_list(lst, fn, ln, update_source_lst, update_file)
+                write_to_list(lst, fn, ln, update_source_lst)
                 update_source_lst = False
-                update_file = False
             else:
                 update_source_lst = True
             ln += 1 if c == "\n" else 0
@@ -267,7 +268,7 @@ def read_input(data, lst):
             # comment
             while i < len(data) and data[i] != '\n':
                 i += 1
-            write_to_list(lst, fn, ln, update_source_lst, update_file)
+            write_to_list(lst, fn, ln, update_source_lst)
             update_source_lst = False
         elif c == '#':
             # c preprocessor
@@ -275,14 +276,13 @@ def read_input(data, lst):
             while i < len(data) and data[i] != '\n':
                 comment += data[i]
                 i += 1
-            write_to_list(lst, fn, ln, update_source_lst, update_file)
+            write_to_list(lst, fn, ln, update_source_lst)
             update_source_lst = False
             comment = comment.split()
             if len(comment) > 2 and all([x.isdigit() for x in comment[1]]):
                 if comment[2][0] == "\"" and comment[2][-1] == "\"":
                     ln = int(comment[1]) - 1
                     fn = comment[2][1:-1]
-                    update_file = True
         elif c.isalpha() or c == '.' or c == '_':
             update_source_lst = True
             name = ""
