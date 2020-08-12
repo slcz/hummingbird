@@ -173,6 +173,8 @@ keyword = {
     ">=":   TOKEN.GE
 }
 
+gen = []
+
 class Env:
     def __init__(self, label = [], sym = {}):
         self.code = []
@@ -188,10 +190,12 @@ class Env:
     def advance(self):
         self.sym['.']  += 1
     def encode(self, enc):
+        global gen
         l = self.sym['.'] - len(self.code)
         if l > 0:
             self.code += [0] * l
         self.code.append(enc)
+        gen.append(enc)
         self.advance()
 
     def add_num_label(self, label):
@@ -221,31 +225,66 @@ class Env:
             l -= 1
         return 0
 
-def read_input(data):
+def write_to_list(lst, fn, ln, update_list, update_file):
+    global gen
+    if not update_list:
+        return
+    if fn == "" or (fn[0] == "<" and fn[-1] == ">"):
+        return
+    if update_file:
+        print("{}:".format(fn))
+    with open(fn, "r") as f:
+        lines = f.readlines()
+        if len(lines) <= ln - 1:
+            return
+        l = lines[ln - 1].rstrip()
+        if len(l) > 40:
+            l = l[:40]
+        print( "{:4d}: {:40s} * ".format(ln, l), end = "", file=lst)
+        for x in gen:
+            print("{:02X} ".format(x), end = "", file=lst)
+        print("", file=lst)
+        gen = []
+
+def read_input(data, lst):
     ln = 1
     fn = ""
     i = 0
+    update_source_lst = False
+    update_file = True
     while i < len(data):
         c = data[i]
         if c.isspace():
             i += 1
+            if c == "\n":
+                write_to_list(lst, fn, ln, update_source_lst, update_file)
+                update_source_lst = False
+                update_file = False
+            else:
+                update_source_lst = True
             ln += 1 if c == "\n" else 0
         elif c == ';':
             # comment
             while i < len(data) and data[i] != '\n':
                 i += 1
+            write_to_list(lst, fn, ln, update_source_lst, update_file)
+            update_source_lst = False
         elif c == '#':
             # c preprocessor
             comment = ""
             while i < len(data) and data[i] != '\n':
                 comment += data[i]
                 i += 1
+            write_to_list(lst, fn, ln, update_source_lst, update_file)
+            update_source_lst = False
             comment = comment.split()
             if len(comment) > 2 and all([x.isdigit() for x in comment[1]]):
                 if comment[2][0] == "\"" and comment[2][-1] == "\"":
                     ln = int(comment[1]) - 1
                     fn = comment[2][1:-1]
+                    update_file = True
         elif c.isalpha() or c == '.' or c == '_':
+            update_source_lst = True
             name = ""
             while data[i].isalnum() or data[i] == '.' or data[i] == '_':
                 name += data[i]
@@ -256,6 +295,7 @@ def read_input(data):
             else:
                 yield(TOKEN.ID, name, fn, ln)
         elif c.isdigit():
+            update_source_lst = True
             if i + 1 < len(data):
                 if data[i + 1] == 'f':
                     i += 2
@@ -284,6 +324,7 @@ def read_input(data):
                     i += 1
                 yield(TOKEN.NUM, int(num), fn, ln)
         elif c == "$":
+            update_source_lst = True
             assert i + 1 < len(data), "{} {}: not a valid char".format(
                 file_name, line_no)
             i += 1
@@ -293,6 +334,7 @@ def read_input(data):
                 fn, ln, c)
             yield(TOKEN.NUM, ord(c), fn, ln)
         else:
+            update_source_lst = True
             c2 = c if i + 1 >= len(data) else c + data[i + 1]
             if c2 in keyword:
                 i += 2
@@ -400,7 +442,7 @@ def term(g, env):
         assert False, "{} {}: unexpected token {}".format(
             fn, ln, t)
 
-def program(g, env):
+def program(g, env, lst):
     t = None
     while True:
         expression = True
@@ -447,17 +489,21 @@ def program(g, env):
             env.encode(l & 0xff)
 
 def main(argv):
+    global gen
     program_data = sys.stdin.read()
     t = None
     env = Env()
     while True:
-        g = read_input(program_data)
-        newenv = Env()
-        env.copy(newenv)
-        program(g, newenv)
-        if newenv.code == env.code:
-            break
-        env = newenv
+        with open("list", "w+") as lst:
+            gen = []
+            g = read_input(program_data, lst)
+            newenv = Env()
+            env.copy(newenv)
+            program(g, newenv, lst)
+            print("", file=lst)
+            if newenv.code == env.code:
+                break
+            env = newenv
     with open("program.h", "w+") as f:
         print("const byte inc_data[] PROGMEM = {", file=f)
         for i, x in enumerate(newenv.code):
