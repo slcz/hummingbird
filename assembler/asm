@@ -195,7 +195,7 @@ class Env:
         if l > 0:
             self.code += [0] * l
         self.code.append(enc)
-        gen.append(enc)
+        gen.append((len(self.code) - 1, enc))
         self.advance()
 
     def add_num_label(self, label):
@@ -244,7 +244,9 @@ def write_to_list(lst, fn, ln, update_list):
         if len(l) > 40:
             l = l[:40]
         print( "{:4d}: {:40s} * ".format(ln, l), end = "", file=lst)
-        for x in gen:
+        for i, (loc, x) in enumerate(gen):
+            if i == 0:
+                print("{:04X}: ".format(loc), end = "", file=lst)
             print("{:02X} ".format(x), end = "", file=lst)
         print("", file=lst)
         gen = []
