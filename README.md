@@ -55,7 +55,7 @@ There are total of 30 instructions:
 |      |      |z zflag| zz: 8 bit memory address starting from 0 (page 0)  |
 |      |      |- clear| II: 8 bit immediate                                |
 |      |      |x keep | i: 4 bit immediate, to be sign extended to 8 bit operand | 
-|------|:----:|:-----:|:--------------------------------------------------:|
+|------|------|-------|----------------------------------------------------|
 | LD   | 0aaa |  -/z  | AREG  <= [aaa] Load from memory                    |
 | ST   | 1aaa |  x/x  | [aaa] <= AREG  Store to memory                     |
 | ADD  | 2aaa |  c/z  | AREG  <= AREG + [aaa] add with memory              |
