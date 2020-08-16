@@ -173,8 +173,6 @@ keyword = {
     ">=":   TOKEN.GE
 }
 
-gen = []
-
 class Env:
     def __init__(self, label = [], sym = {}):
         self.code = [0] * 4096
@@ -190,11 +188,10 @@ class Env:
     def advance(self):
         self.sym['.']  += 1
     def encode(self, enc):
-        global gen
         loc = self.sym['.']
         self.code[loc] = enc
-        gen.append((loc, enc))
         self.advance()
+        return loc, enc
 
     def add_num_label(self, label):
         if self.loc < len(self.label):
@@ -223,17 +220,13 @@ class Env:
             l -= 1
         return 0
 
-lastfile = None
-def write_to_list(lst, fn, ln, update_list):
-    global gen
-    global lastfile
-    if not update_list:
+def write_to_list(lst, enc, fn, ln, sw):
+    if enc == None:
         return
-    if fn == "" or (fn[0] == "<" and fn[-1] == ">"):
+    if fn == "" or (fn[0] == "<" and fn[-1] == ">") or ln < 1:
         return
-    if not lastfile or lastfile != fn:
+    if sw:
         print("{}:".format(fn), file=lst)
-    lastfile = fn
     with open(fn, "r") as f:
         lines = f.readlines()
         if len(lines) <= ln - 1:
@@ -241,50 +234,47 @@ def write_to_list(lst, fn, ln, update_list):
         l = lines[ln - 1].rstrip()
         if len(l) > 40:
             l = l[:40]
-        print( "{:4d}: {:40s} * ".format(ln, l), end = "", file=lst)
-        for i, (loc, x) in enumerate(gen):
-            if i == 0:
-                print("{:04X}: ".format(loc), end = "", file=lst)
-            print("{:02X} ".format(x), end = "", file=lst)
+        print("{:4d}: {:40s} * ".format(ln, l), end = "", file=lst)
+        if (fn, ln) in enc:
+            for i, (loc, x) in enumerate(enc[(fn, ln)]):
+                if i == 0:
+                    print("{:04X}: ".format(loc), end = "", file=lst)
+                print("{:02X} ".format(x), end = "", file=lst)
         print("", file=lst)
         gen = []
 
-def read_input(data, lst):
+def read_input(data, lst = None, enc_dict = None):
     ln = 1
     fn = ""
     i = 0
-    update_source_lst = False
+    switch_file = True
     while i < len(data):
         c = data[i]
         if c.isspace():
             i += 1
             if c == "\n":
-                write_to_list(lst, fn, ln, update_source_lst)
-                update_source_lst = False
-            else:
-                update_source_lst = True
+                write_to_list(lst, enc_dict, fn, ln, switch_file)
+                switch_file = False
             ln += 1 if c == "\n" else 0
         elif c == ';':
             # comment
             while i < len(data) and data[i] != '\n':
                 i += 1
-            write_to_list(lst, fn, ln, update_source_lst)
-            update_source_lst = False
+            write_to_list(lst, enc_dict, fn, ln, switch_file)
+            switch_file = False
         elif c == '#':
             # c preprocessor
             comment = ""
             while i < len(data) and data[i] != '\n':
                 comment += data[i]
                 i += 1
-            write_to_list(lst, fn, ln, update_source_lst)
-            update_source_lst = False
             comment = comment.split()
             if len(comment) > 2 and all([x.isdigit() for x in comment[1]]):
                 if comment[2][0] == "\"" and comment[2][-1] == "\"":
                     ln = int(comment[1]) - 1
                     fn = comment[2][1:-1]
+                    switch_file = True
         elif c.isalpha() or c == '.' or c == '_':
-            update_source_lst = True
             name = ""
             while data[i].isalnum() or data[i] == '.' or data[i] == '_':
                 name += data[i]
@@ -295,7 +285,6 @@ def read_input(data, lst):
             else:
                 yield(TOKEN.ID, name, fn, ln)
         elif c.isdigit():
-            update_source_lst = True
             if i + 1 < len(data):
                 if data[i + 1] == 'f':
                     i += 2
@@ -324,7 +313,6 @@ def read_input(data, lst):
                     i += 1
                 yield(TOKEN.NUM, int(num), fn, ln)
         elif c == "$":
-            update_source_lst = True
             assert i + 1 < len(data), "{} {}: not a valid char".format(
                 file_name, line_no)
             i += 1
@@ -334,7 +322,6 @@ def read_input(data, lst):
                 fn, ln, c)
             yield(TOKEN.NUM, ord(c), fn, ln)
         else:
-            update_source_lst = True
             c2 = c if i + 1 >= len(data) else c + data[i + 1]
             if c2 in keyword:
                 i += 2
@@ -344,6 +331,7 @@ def read_input(data, lst):
                 yield(keyword[c], c, fn, ln)
             else:
                 assert False, "{} {}: unexpected token {}".format(fn, ln, c)
+    write_to_list(lst, enc_dict, fn, ln, switch_file)
     return TOKEN.END
 
 pushback_stack = []
@@ -442,7 +430,8 @@ def term(g, env):
         assert False, "{} {}: unexpected token {}".format(
             fn, ln, t)
 
-def program(g, env, lst):
+def program(g, env):
+    lst_dict = {}
     t = None
     while True:
         expression = True
@@ -471,39 +460,55 @@ def program(g, env, lst):
             inst_length, bits, enc = inst[t]
             if inst_length == 2:
                 t, l, fn, ln = binop(g, 9, env)
-                env.encode((enc << 4) | ((l >> 8) & 0xf))
-                env.encode(l & 0xff)
+                loc_code0 = env.encode((enc << 4) | ((l >> 8) & 0xf))
+                loc_code1 = env.encode(l & 0xff)
+                if (fn, ln) not in lst_dict:
+                    lst_dict[(fn, ln)] = []
+                lst_dict[(fn, ln)].append(loc_code0)
+                lst_dict[(fn, ln)].append(loc_code1)
             elif bits == 4:
                 t, l, fn, ln = binop(g, 9, env)
-                env.encode((enc << 4) | (l & 0xf))
+                loc_code = env.encode( (enc << 4) | (l & 0xf))
+                if (fn, ln) not in lst_dict:
+                    lst_dict[(fn, ln)] = []
+                lst_dict[(fn, ln)].append(loc_code)
             elif bits == 8:
-                env.encode(enc)
+                loc_code = env.encode(enc)
+                if (fn, ln) not in lst_dict:
+                    lst_dict[(fn, ln)] = []
+                lst_dict[(fn, ln)].append(loc_code)
             expression = False
         elif t == TOKEN.END:
-            return
+            return lst_dict
         else:
             push_back(t, l, fn, ln)
 
         if expression:
             t, l, fn, ln = binop(g, 9, env)
-            env.encode(l & 0xff)
+            loc_code = env.encode(l & 0xff)
+            if (fn, ln) not in lst_dict:
+                lst_dict[(fn, ln)] = []
+            lst_dict[(fn, ln)].append(loc_code)
 
 def main(argv):
-    global gen
     program_data = sys.stdin.read()
     t = None
     env = Env()
+    lst_dict = {}
     while True:
-        with open("list", "w+") as lst:
-            gen = []
-            g = read_input(program_data, lst)
-            newenv = Env()
-            env.copy(newenv)
-            program(g, newenv, lst)
-            print("", file=lst)
-            if newenv.code == env.code:
-                break
-            env = newenv
+        g = read_input(program_data)
+        newenv = Env()
+        env.copy(newenv)
+        lst_dict = program(g, newenv)
+        if newenv.code == env.code:
+            break
+        env = newenv
+    with open("list", "w+") as lst:
+        g = read_input(program_data, lst, lst_dict)
+        t = None
+        while t != TOKEN.END:
+            t, l, fn, ln = token(g)
+
     l = len(newenv.code)
     for i in range(len(newenv.code) - 1, 0, -1):
         if newenv.code[i] == 0:
