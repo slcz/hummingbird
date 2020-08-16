@@ -177,12 +177,12 @@ gen = []
 
 class Env:
     def __init__(self, label = [], sym = {}):
-        self.code = []
+        self.code = [0] * 4096
         self.label = []
         self.loc = 0
         self.sym = {'.': 0}
     def copy(self, env):
-        env.code = []
+        env.code = [0] * 4096
         env.label = self.label
         env.sym = self.sym
         env.loc = 0
@@ -191,11 +191,9 @@ class Env:
         self.sym['.']  += 1
     def encode(self, enc):
         global gen
-        l = self.sym['.'] - len(self.code)
-        if l > 0:
-            self.code += [0] * l
-        self.code.append(enc)
-        gen.append((len(self.code) - 1, enc))
+        loc = self.sym['.']
+        self.code[loc] = enc
+        gen.append((loc, enc))
         self.advance()
 
     def add_num_label(self, label):
@@ -506,6 +504,13 @@ def main(argv):
             if newenv.code == env.code:
                 break
             env = newenv
+    l = len(newenv.code)
+    for i in range(len(newenv.code) - 1, 0, -1):
+        if newenv.code[i] == 0:
+            l -= 1
+        else:
+            break
+    newenv.code = newenv.code[0:l]
     with open("program.h", "w+") as f:
         print("const byte inc_data[] PROGMEM = {", file=f)
         for i, x in enumerate(newenv.code):
