@@ -50,7 +50,7 @@ bits to form a 8 bit immediate operand.
 There are total of 30 instructions:
 
 | NAME | OP   | FLAGS | Description                                        |
-|------|------|-------|----------------------------------------------------|
+| :--  | :--  |  :-:  | :--                                                |
 |      |      |c cflag| aaa: 12 bit memory address                         |
 |      |      |z zflag| zz: 8 bit memory address starting from 0 (page 0)  |
 |      |      |- clear| II: 8 bit immediate                                |
