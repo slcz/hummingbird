@@ -13,6 +13,8 @@ int main(int argc, char **argv)
     Verilated::commandArgs(argc, argv);
     auto top = new Vhummingbird;
     std::vector<int> input_stream;
+    int nextinput = 0;
+    bool inputpending = false;
 
     if (argc > 1) {
         std::ifstream file(argv[1]);
@@ -44,7 +46,7 @@ int main(int argc, char **argv)
         int out0, out1;
 
         // toggle clock
-        top->dev0_i = bootloader_done && it != input_stream.end() ? *it++ : 0;
+        top->dev0_i = bootloader_done ? nextinput : 0;
         top->clk = 1;
         top->eval();
         top->clk = 0;
@@ -65,6 +67,13 @@ int main(int argc, char **argv)
             alumode = top->test_alumode;
             out0 = top->test_dev0_data_o;
             out1 = top->test_dev1_data_o;
+            if (out1 == 8 and inputpending == false) {
+                nextinput = it != input_stream.end() ? *it++ : 0;
+                inputpending = true;
+            }
+            if (out1 == 0) {
+                inputpending = false;
+            }
             if (phase == 0) {
                 if (oldpc == pc) {
                     break;
@@ -89,6 +98,7 @@ int main(int argc, char **argv)
                 ((control_signals >> 4) & 0x1) <<
                 " output0 " << std::setw(4) << out0 <<
                 " output1 " << std::setw(4) << out1 <<
+                " input   " << std::setw(4) << nextinput <<
                 std::endl;
         }
 
