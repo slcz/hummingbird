@@ -51,45 +51,46 @@ There are total of 30 instructions:
 
 | NAME | OP   | FLAGS | Description                                        |
 |------|------|-------|----------------------------------------------------|
-|      |      |       | aaa: 12 bit memory address                         |
-|      |      |       | zz: 8 bit memory address starting from 0 (page 0)  |
-|      |      |       | II: 8 bit immediate                                |
-|      |      |       | i: 4 bit immediate, to be sign extended to 8 bit operand | 
+|      |      |c cflag| aaa: 12 bit memory address                         |
+|      |      |z zflag| zz: 8 bit memory address starting from 0 (page 0)  |
+|      |      |- clear| II: 8 bit immediate                                |
+|      |      |x keep | i: 4 bit immediate, to be sign extended to 8 bit operand | 
+|------|------|-------|----------------------------------------------------|
 | LD   | 0aaa |  -/z  | AREG  <= [aaa] Load from memory                    |
-| ST   | 1aaa |  -/-  | [aaa] <= AREG  Store to memory                     |
+| ST   | 1aaa |  x/x  | [aaa] <= AREG  Store to memory                     |
 | ADD  | 2aaa |  c/z  | AREG  <= AREG + [aaa] add with memory              |
 | ADDI | 3i   |  c/z  | AREG  <= AREG + signext(i) add with immediate      |
 | ADDIC| 4i   |  c/z  | AREG  <= AREG + signext(i) + carry                 |
 | SUB  | 5aaa |  c/z  | AREG  <= AREG - [aaa] Subtract from memory         |
-| JMP  | 6aaa |  -/-  | PC    <= [aaa] jump                                |
-| JC   | 7aaa |  -/-  | PC    <= [aaa] jump if cflag else PC + 1           |
+| JMP  | 6aaa |  x/x  | PC    <= [aaa] jump                                |
+| JC   | 7aaa |  x/x  | PC    <= [aaa] jump if cflag else PC + 1           |
 | CMP  | 8aaa |  c/z  | AREG + (-[aaa]), Compare with memory               |
 | CMPI | 9i   |  c/z  | AREG + (-signext(i)), Compare with immediate       |
-| NOR  | Aaaa |  c/z  | AREG  <= ~(AREG | [aaa]) nor with memory           |
-| NORI | Bi   |  c/z  | AREG  <= ~(AREG | signext(i)) nor with immediate   |
-| AND  | Caaa |  c/z  | AREG  <= AREG & [aaa]                              |
-| XOR  | Daaa |  c/z  | AREG  <= AREG ^ [aaa]                              |
-| LIH  | Ei   |  -/-  | AREG  <= i << 4 | 0 Load to high nibble            |
-| SAVE | F0 II (z=0) |  -/-  | [[0]] <= II [0] <= [0] + 1 Push immediate II on stack |
-| RETURN | F0 (z=1) |  -/-  | [0] <= [0] - 2, PC <= [[0]], Pop 2 bytes from stack and jump to stack, |
+| NOR  | Aaaa |  -/z  | AREG  <= ~(AREG bitor [aaa]) nor with memory       |
+| NORI | Bi   |  -/z  | AREG  <= ~(AREG bitor signext(i)) nor with immediate |
+| AND  | Caaa |  -/z  | AREG  <= AREG bitand [aaa]                         |
+| XOR  | Daaa |  -/z  | AREG  <= AREG xor [aaa]                            |
+| LIH  | Ei   |  -/z  | AREG  <= i shiftleft 4 bitor 0, Load to high nibble |
+| SAVE | F0 II (z=0) |  x/x  | [[0]] <= II [0] <= [0] + 1 Push immediate II on stack |
+| RETURN | F0 (z=1) |  x/x  | [0] <= [0] - 2, PC <= [[0]], Pop 2 bytes from stack and jump to stack, |
 |      |      |       | where the jump back to caller instruction is built. |
 |      |      |       | Here, both F0 opcode is used for save and return, if |
 |      |      |       | z flag is set, the opcode is treated as return, otherwise, |
 |      |      |       | it is taken as save instruction.                   |
 | RESERVED | F1 |     |                                                    |
-| GT   | F2   |  c/z  | cflag = !cflag and !zflag                          |
-| LT   | F3   |  n/a  | cflag = cflag and !zflag                           |
-| EQ   | F4   |  n/a  | cflag = zflag                                      |
-| NE   | F5   |  n/a  | cflag = !zflag                                     |
-| NC   | F6   |  n/a  | cflag = !cflag                                     |
-| PUSH | F7 zz|  -/-  | [[zz]] <= AREG, [zz] = [zz] + 1, push on stack     |
-| POP  | F8 zz|  -/-  | [zz] = [zz] - 1, AREG <= [[zz]], pop from stack    |
-| PEEK | F9 zz II|  -/z  | A <= [[zz] - II], peek stack                    |
+| GT   | F2   |  c/-  | cflag = !cflag and !zflag                          |
+| LT   | F3   |  c/-  | cflag = cflag and !zflag                           |
+| EQ   | F4   |  c/-  | cflag = zflag                                      |
+| NE   | F5   |  c/-  | cflag = !zflag                                     |
+| NC   | F6   |  c/-  | cflag = !cflag                                     |
+| PUSH | F7 zz|  x/x  | [[zz]] <= AREG, [zz] = [zz] + 1, push on stack     |
+| POP  | F8 zz|  x/x  | [zz] = [zz] - 1, AREG <= [[zz]], pop from stack    |
+| PEEK | F9 zz II|  x/x  | A <= [[zz] - II], peek stack                    |
 | SETZ | FA   |  -/z  | z <= 1                                             |
-| SHL  | FB   |  -/z  | AREG <= AREG<<1, shift left                        |
-| SHR  | FC   |  -/z  | AREG <= AREG>>1, zero fill bit 7, shift right      |
-| ROL  | FD   |  -/z  | A=A<<1 | A[7]                                      |
-| ROR  | FE   |  -/z  | A=A>>1 | (A[0]<<8)                                 |
+| SHL  | FB   |  -/z  | AREG <= AREG shiftleft 1                           |
+| SHR  | FC   |  -/z  | AREG <= AREG shiftright 1, zero fill bit 7         |
+| ROL  | FD   |  -/z  | A=A shiftleft 1 bitor A[7], rotate right           |
+| ROR  | FE   |  -/z  | A=A shiftright 1 bitor (A[0]<<8), rotate right     |
 | ASR  | FF   |  -/z  | arithmatic shift right by 1 bit                    |
 
 ALU is expanded to 8 bit wide and has 2 input ports. Port A is always
