@@ -51,15 +51,15 @@ There are total of 30 instructions:
 
 | NAME | OP   | FLAGS | Description                                        |     |
 | :--  | :--  |  :-:  | :--                                                | :-- |
-|      |      |c cflag| aaa: 12 bit memory address                         ||
+|      |      |c cflag| <td colspan=2>aaa: 12 bit memory address
 |      |      |z zflag| zz: 8 bit memory address starting from 0 (page 0)  ||
 |      |      |- clear| II: 8 bit immediate                                ||
 |      |      |x keep | i: 4 bit immediate, to be sign extended to 8 bit operand || 
 | LD   | 0aaa |  -/z  | AREG  <= [aaa] | Load from memory                  |
 | ST   | 1aaa |  x/x  | [aaa] <= AREG  | Store to memory                   |
-| ADD  | 2aaa |  c/z  | AREG  <= AREG + [aaa] | add with memory            |
-| ADDI | 3i   |  c/z  | AREG  <= AREG + signext(i) | add immediate         |
-| ADDIC| 4i   |  c/z  | AREG  <= AREG + signext(i) | add immediate with carry |
+| ADD  | 2aaa |  c/z  | AREG  <= AREG + [aaa] | Add with memory            |
+| ADDI | 3i   |  c/z  | AREG  <= AREG + signext(i) | Add immediate         |
+| ADDIC| 4i   |  c/z  | AREG  <= AREG + signext(i) | Add immediate with carry |
 | SUB  | 5aaa |  c/z  | AREG  <= AREG - [aaa] | Subtract from memory       |
 | JMP  | 6aaa |  x/x  | PC    <= [aaa] | Jump                              |
 | JC   | 7aaa |  x/x  | PC    <= [aaa] | Jump if cflag else PC + 1         |
