@@ -51,7 +51,7 @@ There are total of 30 instructions:
 
 | NAME | OP   | FLAGS | Description                                        |     |
 | :--  | :--  |  :-:  | :--                                                | :-- |
-|      |      |c cflag| <td colspan=2>aaa: 12 bit memory address
+<td>  <td>  <td> c cflag <td colspan=2>aaa: 12 bit memory address
 |      |      |z zflag| zz: 8 bit memory address starting from 0 (page 0)  ||
 |      |      |- clear| II: 8 bit immediate                                ||
 |      |      |x keep | i: 4 bit immediate, to be sign extended to 8 bit operand || 
